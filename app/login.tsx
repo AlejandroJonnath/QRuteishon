@@ -9,6 +9,7 @@ import { // Importaremos lo necesario para la interfaz
     KeyboardAvoidingView, // Este contenedor ayudará a que cuando abras el teclado para escribir, este no tape los campos del formulario
     Platform, // Sirve para detectar si es IOS, Android o Web
     StatusBar, // Permite configurar la barra superior del sistema
+    ScrollView, // Para permitir scroll
 
 } from 'react-native';
 
@@ -28,14 +29,25 @@ export default function LoginScreen() { //Exporta la pantalla principal (el logi
 
         usuario, // Guarda el nombre de usuario cuando el formulario está en modo registro  
         setUsuario, // Función para actualizar el estado usuario
+        cedula,
+        setCedula,
+        nombre,
+        setNombre,
+        apellido,
+        setApellido,
+        telefono,
+        setTelefono,
         email, // Guarda el correo electrónico ingresado 
         setEmail, // Función para actualizar el estado email    
         password, // Guarda la contraseña ingresada      
         setPassword, // Función para actualizar el estado password  
         loading, // Indica si se está ejecutando una acción, como login o registro
         modoRegistro, // Indica si el formulario está en modo registro. true = mostrar formulario de registro. false = mostrar formulario de inicio de sesión
+        registroFase,
         handleLogin, // Función que inicia sesión con Supabase
         handleRegister, // Función que registra un nuevo usuario en Supabase
+        siguienteFase,
+        faseAnterior,
         cambiarModo // Función que cambia entre modo login y modo registro
 
     } = useLogin();
@@ -44,83 +56,83 @@ export default function LoginScreen() { //Exporta la pantalla principal (el logi
     return ( //Retornamos la UI
 
         <KeyboardAvoidingView //El KeyboardAvoidingView evita que el teclado del celular cubra los inputs
-
-
-            style={styles.container} // Aplica el estilo principal de la pantalla (esto sale de acá import { styles } from './_styles/loginStyles'; //Estilos)
-
-            // En iOS usa padding para mover el contenido cuando aparece el teclado
-            // En Android se deja undefined porque normalmente el comportamiento ya lo maneja el sistema
+            style={{ flex: 1, backgroundColor: '#0B132B' }} // Estilo base para el teclado
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-            {/* 
+            <ScrollView
+                contentContainerStyle={styles.container}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+            >
+                {/* 
                 Configura la barra de estado superior.
                 barStyle="light-content" hace que los íconos de la barra sean claros.
                 backgroundColor="#0B132B" pone el fondo de la barra en azul oscuro.
             */}
-            <StatusBar barStyle="light-content" backgroundColor="#0B132B" />
+                <StatusBar barStyle="light-content" backgroundColor="#0B132B" />
 
-            {/* fondo en la parte superior */}
-            <View style={styles.backgroundGlowTop} />
+                {/* fondo en la parte superior */}
+                <View style={styles.backgroundGlowTop} />
 
-            {/* fondo en la parte inferior */}
-            <View style={styles.backgroundGlowBottom} />
+                {/* fondo en la parte inferior */}
+                <View style={styles.backgroundGlowBottom} />
 
-            {/* 
+                {/* 
                 Animated.View es una versión animada de View.
                 Aquí representa la tarjeta principal del login.
             */}
-            <Animated.View
-                /*
-                    entering define la animación cuando este componente aparece en pantalla.
+                <Animated.View
+                    /*
+                        entering define la animación cuando este componente aparece en pantalla.
+    
+                        FadeInDown:
+                        Hace que la tarjeta aparezca suavemente con efecto de opacidad
+                        y desplazamiento vertical. Es decir, entra con un efecto elegante.
+    
+                        duration(800):
+                        Define la duración de la animación en milisegundos.
+                        800 ms equivale a 0.8 segundos.
+    
+                        springify():
+                        Convierte la animación en una animación tipo resorte.
+                        Esto hace que el movimiento se sienta más natural y menos rígido.
+    
+                        damping(14):
+                        Controla cuánto rebota o se suaviza el efecto de resorte.
+                        Un valor de 14 reduce el rebote y hace que la animación se vea fluida.
+                        Si el valor fuera más bajo, habría más rebote.
+                        Si el valor fuera más alto, la animación sería más seca.
+                    */
+                    entering={FadeInDown.duration(800).springify().damping(14)}
 
-                    FadeInDown:
-                    Hace que la tarjeta aparezca suavemente con efecto de opacidad
-                    y desplazamiento vertical. Es decir, entra con un efecto elegante.
+                    // Aplica los estilos visuales de la tarjeta que tenemos en el _styles
+                    style={styles.card}
+                >
+                    {/* Encabezado, donde están el icono QR y el nombre Q-Ruta */}
+                    <View style={styles.headerContainer}>
+                        {/* Icono principal de la app, representa el QR */}
+                        <Ionicons
+                            // Nombre del icono que se mostrará
+                            name="qr-code-outline"
 
-                    duration(800):
-                    Define la duración de la animación en milisegundos.
-                    800 ms equivale a 0.8 segundos.
+                            // Tamaño del icono en píxeles
+                            size={44}
 
-                    springify():
-                    Convierte la animación en una animación tipo resorte.
-                    Esto hace que el movimiento se sienta más natural y menos rígido.
+                            // Color verde principal del logo
+                            color="#00E676"
 
-                    damping(14):
-                    Controla cuánto rebota o se suaviza el efecto de resorte.
-                    Un valor de 14 reduce el rebote y hace que la animación se vea fluida.
-                    Si el valor fuera más bajo, habría más rebote.
-                    Si el valor fuera más alto, la animación sería más seca.
-                */
-                entering={FadeInDown.duration(800).springify().damping(14)}
+                            // Estilo adicional del icono
+                            style={styles.headerIcon}
+                        />
 
-                // Aplica los estilos visuales de la tarjeta que tenemos en el _styles
-                style={styles.card}
-            >
-                {/* Encabezado, donde están el icono QR y el nombre Q-Ruta */}
-                <View style={styles.headerContainer}>
-                    {/* Icono principal de la app, representa el QR */}
-                    <Ionicons
-                        // Nombre del icono que se mostrará
-                        name="qr-code-outline"
+                        {/* Nombre de la aplicación */}
+                        <Text style={styles.logo}>Q-Ruta</Text>
+                    </View>
 
-                        // Tamaño del icono en píxeles
-                        size={44}
+                    {/* Slogan o frase corta de la aplicación */}
+                    <Text style={styles.subtitle}>Tu gasolina, al instante.</Text>
 
-                        // Color verde principal del logo
-                        color="#00E676"
-
-                        // Estilo adicional del icono
-                        style={styles.headerIcon}
-                    />
-
-                    {/* Nombre de la aplicación */}
-                    <Text style={styles.logo}>Q-Ruta</Text>
-                </View>
-
-                {/* Slogan o frase corta de la aplicación */}
-                <Text style={styles.subtitle}>Tu gasolina, al instante.</Text>
-
-                {/* 
+                    {/* 
                     Animated.View para animar cambios en el layout del formulario.
 
                     layout={Layout.springify().damping(16)}:
@@ -137,217 +149,276 @@ export default function LoginScreen() { //Exporta la pantalla principal (el logi
                     Controla el rebote del resorte.
                     16 es un valor suave, con poco rebote.
                 */}
-                <Animated.View layout={LinearTransition.springify().damping(16)}>
-                    {/* 
-                        Renderizado condicional.
-                        Si modoRegistro es true, se muestra el campo de nombre de usuario.
-                        Si modoRegistro es false, este bloque no se muestra.
-                    */}
-                    {modoRegistro && (
-                        /*
-                            Este Animated.View anima la entrada del campo de usuario.
-                            Solo aparece cuando el usuario cambia a modo registro.
-                        */
-                        <Animated.View
-                            /*
-                                FadeInDown.duration(400):
-                                Hace que este campo aparezca con una animación más corta.
-                                400 ms equivale a 0.4 segundos.
-                                Al no usar springify aquí, la animación es más simple.
-                            */
-                            entering={FadeInDown.duration(400)}
-                        >
-                            {/* Etiqueta del campo de nombre de usuario */}
-                            <Text style={styles.label}>Nombre de usuario</Text>
+                    <Animated.View layout={LinearTransition.springify().damping(16)}>
+                        {/* Fase 1 de registro o inicio de sesión */}
+                        {(!modoRegistro || (modoRegistro && registroFase === 1)) && (
+                            <Animated.View entering={FadeInDown.duration(400)}>
+                                {modoRegistro && (
+                                    <>
+                                        {/* Etiqueta del campo de nombre de usuario */}
+                                        <Text style={styles.label}>Nombre de usuario</Text>
 
-                            {/* Contenedor del input de usuario con su icono */}
-                            <View style={styles.inputContainer}>
-                                {/* Icono de persona para representar usuario */}
-                                <Ionicons
-                                    // Icono de usuario
-                                    name="person-outline"
+                                        {/* Contenedor del input de usuario con su icono */}
+                                        <View style={styles.inputContainer}>
+                                            {/* Icono de persona para representar usuario */}
+                                            <Ionicons
+                                                // Icono de usuario
+                                                name="person-outline"
 
-                                    // Tamaño del icono
-                                    size={20}
+                                                // Tamaño del icono
+                                                size={20}
 
-                                    // Color gris claro del icono
-                                    color="#9CA3AF"
+                                                // Color gris claro del icono
+                                                color="#9CA3AF"
 
-                                    // Estilo del icono dentro del input
-                                    style={styles.inputIcon}
-                                />
+                                                // Estilo del icono dentro del input
+                                                style={styles.inputIcon}
+                                            />
 
-                                {/* Input para escribir el nombre de usuario */}
-                                <TextInput
-                                    // Estilo del input
-                                    style={styles.input}
+                                            {/* Input para escribir el nombre de usuario */}
+                                            <TextInput
+                                                // Estilo del input
+                                                style={styles.input}
 
-                                    // Texto guía que aparece cuando el input está vacío
-                                    placeholder="Ejemplo: Jonnath"
+                                                // Texto guía que aparece cuando el input está vacío
+                                                placeholder="Ejemplo: Jonnath"
 
-                                    // Color del placeholder
-                                    placeholderTextColor="#6B7280"
+                                                // Color del placeholder
+                                                placeholderTextColor="#6B7280"
 
-                                    // Valor actual del input, conectado al estado usuario
-                                    value={usuario}
+                                                // Valor actual del input, conectado al estado usuario
+                                                value={usuario}
 
-                                    // Cada vez que el usuario escribe, actualiza el estado usuario
-                                    onChangeText={setUsuario}
-                                />
-                            </View>
-                        </Animated.View>
-                    )}
+                                                // Cada vez que el usuario escribe, actualiza el estado usuario
+                                                onChangeText={setUsuario}
+                                            />
+                                        </View>
+                                    </>
+                                )}
 
-                    {/* Etiqueta del campo correo electrónico */}
-                    <Text style={styles.label}>Correo electrónico</Text>
 
-                    {/* Contenedor del input de correo con icono */}
-                    <View style={styles.inputContainer}>
-                        {/* Icono de correo electrónico */}
-                        <Ionicons
-                            // Icono de sobre/correo
-                            name="mail-outline"
+                                {/* Etiqueta del campo correo electrónico */}
+                                <Text style={styles.label}>Correo electrónico</Text>
 
-                            // Tamaño del icono
-                            size={20}
+                                {/* Contenedor del input de correo con icono */}
+                                <View style={styles.inputContainer}>
+                                    {/* Icono de correo electrónico */}
+                                    <Ionicons
+                                        // Icono de sobre/correo
+                                        name="mail-outline"
 
-                            // Color gris claro del icono
-                            color="#9CA3AF"
+                                        // Tamaño del icono
+                                        size={20}
 
-                            // Estilo del icono dentro del input
-                            style={styles.inputIcon}
-                        />
+                                        // Color gris claro del icono
+                                        color="#9CA3AF"
 
-                        {/* Input para escribir el correo electrónico */}
-                        <TextInput
-                            // Estilo del input
-                            style={styles.input}
+                                        // Estilo del icono dentro del input
+                                        style={styles.inputIcon}
+                                    />
 
-                            // Texto guía del input
-                            placeholder="ejemplo@correo.com"
+                                    {/* Input para escribir el correo electrónico */}
+                                    <TextInput
+                                        // Estilo del input
+                                        style={styles.input}
 
-                            // Color del texto guía
-                            placeholderTextColor="#6B7280"
+                                        // Texto guía del input
+                                        placeholder="ejemplo@correo.com"
 
-                            // Valor actual del correo
-                            value={email}
+                                        // Color del texto guía
+                                        placeholderTextColor="#6B7280"
 
-                            // Actualiza el estado email cada vez que se escribe
-                            onChangeText={setEmail}
+                                        // Valor actual del correo
+                                        value={email}
 
-                            // Evita que el teclado ponga mayúscula automáticamente
-                            autoCapitalize="none"
+                                        // Actualiza el estado email cada vez que se escribe
+                                        onChangeText={setEmail}
 
-                            // Muestra un teclado optimizado para correos electrónicos
-                            keyboardType="email-address"
-                        />
-                    </View>
+                                        // Evita que el teclado ponga mayúscula automáticamente
+                                        autoCapitalize="none"
 
-                    {/* Etiqueta del campo contraseña */}
-                    <Text style={styles.label}>Contraseña</Text>
+                                        // Muestra un teclado optimizado para correos electrónicos
+                                        keyboardType="email-address"
+                                    />
+                                </View>
 
-                    {/* Contenedor del input de contraseña con icono */}
-                    <View style={styles.inputContainer}>
-                        {/* Icono de candado */}
-                        <Ionicons
-                            // Icono de candado cerrado
-                            name="lock-closed-outline"
+                                {/* Etiqueta del campo contraseña */}
+                                <Text style={styles.label}>Contraseña</Text>
 
-                            // Tamaño del icono
-                            size={20}
+                                {/* Contenedor del input de contraseña con icono */}
+                                <View style={styles.inputContainer}>
+                                    {/* Icono de candado */}
+                                    <Ionicons
+                                        // Icono de candado cerrado
+                                        name="lock-closed-outline"
 
-                            // Color gris claro del icono
-                            color="#9CA3AF"
+                                        // Tamaño del icono
+                                        size={20}
 
-                            // Estilo del icono dentro del input
-                            style={styles.inputIcon}
-                        />
+                                        // Color gris claro del icono
+                                        color="#9CA3AF"
 
-                        {/* Input para escribir la contraseña */}
-                        <TextInput
-                            // Estilo del input
-                            style={styles.input}
+                                        // Estilo del icono dentro del input
+                                        style={styles.inputIcon}
+                                    />
 
-                            // Texto guía del input
-                            placeholder="Ingresa tu contraseña"
+                                    {/* Input para escribir la contraseña */}
+                                    <TextInput
+                                        // Estilo del input
+                                        style={styles.input}
 
-                            // Color del texto guía
-                            placeholderTextColor="#6B7280"
+                                        // Texto guía del input
+                                        placeholder="Ingresa tu contraseña"
 
-                            // Valor actual de la contraseña
-                            value={password}
+                                        // Color del texto guía
+                                        placeholderTextColor="#6B7280"
 
-                            // Actualiza el estado password cada vez que se escribe
-                            onChangeText={setPassword}
+                                        // Valor actual de la contraseña
+                                        value={password}
 
-                            // Oculta los caracteres escritos para proteger la contraseña
-                            secureTextEntry
-                        />
-                    </View>
+                                        // Actualiza el estado password cada vez que se escribe
+                                        onChangeText={setPassword}
 
-                    {/* Botón principal: sirve para iniciar sesión o crear cuenta */}
-                    <TouchableOpacity
-                        /*
-                            Aplica dos estilos:
-                            styles.button siempre se aplica.
-                            styles.buttonDisabled solo se aplica cuando loading es true.
-                        */
-                        style={[styles.button, loading && styles.buttonDisabled]}
-
-                        /*
-                            Si modoRegistro es true, ejecuta handleRegister.
-                            Si modoRegistro es false, ejecuta handleLogin.
-                        */
-                        onPress={modoRegistro ? handleRegister : handleLogin}
-
-                        // Deshabilita el botón mientras loading sea true para evitar doble clic
-                        disabled={loading}
-
-                        /*
-                            activeOpacity define qué tanto se transparenta el botón al tocarlo.
-                            0.8 significa que baja un poco la opacidad al presionar.
-                            Mientras más bajo el número, más fuerte se nota el efecto.
-                        */
-                        activeOpacity={0.8}
-                    >
-                        {/* Si loading es true, muestra un indicador de carga */}
-                        {loading ? (
-                            // Spinner que indica que se está procesando el login o registro
-                            <ActivityIndicator color="#0B132B" size="small" />
-                        ) : (
-                            // Si no está cargando, muestra el texto del botón
-                            <Text style={styles.buttonText}>
-                                {/* Cambia el texto del botón dependiendo del modo actual */}
-                                {modoRegistro ? 'Crear cuenta' : 'Ingresar'}
-                            </Text>
+                                        // Oculta los caracteres escritos para proteger la contraseña
+                                        secureTextEntry
+                                    />
+                                </View>
+                            </Animated.View>
                         )}
-                    </TouchableOpacity>
 
-                    {/* Botón secundario para cambiar entre login y registro */}
-                    <TouchableOpacity
-                        // Al presionar cambia entre modo login y modo registro
-                        onPress={cambiarModo}
+                        {/* Fase 2 de registro (Datos personales) */}
+                        {modoRegistro && registroFase === 2 && (
+                            <Animated.View entering={FadeInDown.duration(400)}>
+                                {/* Campo de Nombre */}
+                                <Text style={styles.label}>Nombre</Text>
+                                <View style={styles.inputContainer}>
+                                    <Ionicons name="person-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Tu nombre"
+                                        placeholderTextColor="#6B7280"
+                                        value={nombre}
+                                        onChangeText={setNombre}
+                                    />
+                                </View>
 
-                        // Si loading es true, no permite cambiar de modo
-                        disabled={loading}
+                                {/* Campo de Apellido */}
+                                <Text style={styles.label}>Apellido</Text>
+                                <View style={styles.inputContainer}>
+                                    <Ionicons name="people-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Tu apellido"
+                                        placeholderTextColor="#6B7280"
+                                        value={apellido}
+                                        onChangeText={setApellido}
+                                    />
+                                </View>
 
-                        // Estilo del contenedor del cambio de modo
-                        style={styles.switchModeContainer}
-                    >
-                        {/* Texto principal del cambio de modo */}
-                        <Text style={styles.switchModeText}>
-                            {/* Si está en registro pregunta si ya tiene cuenta; si está en login pregunta si es nuevo */}
-                            {modoRegistro ? '¿Ya tienes una cuenta?' : '¿Eres nuevo?'}
-                        </Text>
+                                {/* Campo de Cédula */}
+                                <Text style={styles.label}>Cédula</Text>
+                                <View style={styles.inputContainer}>
+                                    <Ionicons name="id-card-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Ejemplo: 1723456789"
+                                        placeholderTextColor="#6B7280"
+                                        value={cedula}
+                                        onChangeText={setCedula}
+                                        keyboardType="numeric"
+                                    />
+                                </View>
 
-                        {/* Texto resaltado para cambiar de modo */}
-                        <Text style={styles.link}>
-                            {/* Si está en registro ofrece iniciar sesión; si está en login ofrece registrarse */}
-                            {modoRegistro ? ' Inicia sesión' : ' Regístrate aquí'}
-                        </Text>
-                    </TouchableOpacity>
+                                {/* Campo de Teléfono */}
+                                <Text style={styles.label}>Teléfono</Text>
+                                <View style={styles.inputContainer}>
+                                    <Ionicons name="call-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Ejemplo: 0987654321"
+                                        placeholderTextColor="#6B7280"
+                                        value={telefono}
+                                        onChangeText={setTelefono}
+                                        keyboardType="phone-pad"
+                                    />
+                                </View>
+                            </Animated.View>
+                        )}
+
+                        {/* Botón principal: sirve para iniciar sesión o crear cuenta */}
+                        <TouchableOpacity
+                            /*
+                                Aplica dos estilos:
+                                styles.button siempre se aplica.
+                                styles.buttonDisabled solo se aplica cuando loading es true.
+                            */
+                            style={[styles.button, loading && styles.buttonDisabled]}
+
+                            /*
+                                Llama a la función correspondiente según el modo y fase
+                            */
+                            onPress={modoRegistro ? (registroFase === 1 ? siguienteFase : handleRegister) : handleLogin}
+
+                            // Deshabilita el botón mientras loading sea true para evitar doble clic
+                            disabled={loading}
+
+                            /*
+                                activeOpacity define qué tanto se transparenta el botón al tocarlo.
+                                0.8 significa que baja un poco la opacidad al presionar.
+                                Mientras más bajo el número, más fuerte se nota el efecto.
+                            */
+                            activeOpacity={0.8}
+                        >
+                            {/* Si loading es true, muestra un indicador de carga */}
+                            {loading ? (
+                                // Spinner que indica que se está procesando el login o registro
+                                <ActivityIndicator color="#0B132B" size="small" />
+                            ) : (
+                                // Si no está cargando, muestra el texto del botón
+                                <Text style={styles.buttonText}>
+                                    {/* Cambia el texto del botón dependiendo del modo actual */}
+                                    {modoRegistro ? (registroFase === 1 ? 'Siguiente' : 'Crear cuenta') : 'Ingresar'}
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+
+                        {/* Botón para volver al paso anterior en la fase 2 */}
+                        {modoRegistro && registroFase === 2 && (
+                            <TouchableOpacity
+                                onPress={faseAnterior}
+                                disabled={loading}
+                                style={{ alignItems: 'center', marginTop: 16 }}
+                            >
+                                <Text style={{ color: '#9CA3AF', fontSize: 15, fontWeight: '500' }}>Volver al paso anterior</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        {/* Botón secundario para cambiar entre login y registro (solo visible en login o fase 1 de registro) */}
+                        {!(modoRegistro && registroFase === 2) && (
+                            <TouchableOpacity
+                                // Al presionar cambia entre modo login y modo registro
+                                onPress={cambiarModo}
+                                // Si loading es true, no permite cambiar de modo
+                                disabled={loading}
+                                // Estilo del contenedor del cambio de modo
+                                style={styles.switchModeContainer}
+                            >
+                                {/* Texto principal del cambio de modo */}
+                                <Text style={styles.switchModeText}>
+                                    {/* Si está en registro pregunta si ya tiene cuenta; si está en login pregunta si es nuevo */}
+                                    {modoRegistro ? '¿Ya tienes una cuenta?' : '¿Eres nuevo?'}
+                                </Text>
+
+                                {/* Texto resaltado para cambiar de modo */}
+                                <Text style={styles.link}>
+                                    {/* Si está en registro ofrece iniciar sesión; si está en login ofrece registrarse */}
+                                    {modoRegistro ? ' Inicia sesión' : ' Regístrate aquí'}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                    </Animated.View>
                 </Animated.View>
-            </Animated.View>
+            </ScrollView>
         </KeyboardAvoidingView>
     );
 }

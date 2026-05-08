@@ -1,33 +1,23 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'; // Necesitamos crear contexto de auth, usar el auth, usar efectos y usar estados (activo o inactivo)
-
 import { Session } from '@supabase/supabase-js'; //Traemos la sesión desde supabase
-
 import { supabase } from '../lib/supabase'; //Importamos la conexión de supabase que tenemos en el supabase.ts
 
 type Rol = 'cliente' | 'operador' | 'admin'; //Definimos los roles que tenemos en el supabase (exactamente como están escritos allá)
 
-
 type Perfil = { // Vamos a definir la estructura que tendrá el perfil del usuario
 
     id: string; // Gyarda el id del usuario (todo debe coincidir con el id de supabase)
-
     usuario: string | null; // guarda el username, puede ser texto o nulo
-
     rol: Rol; //guardamos el rol del usuario (cliente, operador o admin)
-
     estado: 'activo' | 'inactivo'; //guardamos el estado del usuario (para esto servirá el Use state)
 };
 
 type AuthContextType = { //Aquí definiré la estructura de los datos y las funciones que tendrá el contexto del auth
 
     session: Session | null; // Guardamos la sesión del usuario (será null en caso que no haya iniciado sesión)
-
     perfil: Perfil | null; // guardamos el perfil del usuario que está en ese momento, le pongo null en caso que no haya el usuario o no le cargue el perfil
-
     loading: boolean; // indicará si está cargando la sesión o el perfil
-
     signOut: () => Promise<void>; //Esta promesa dentro de este método será para para cerrar sesión
-
     loadPerfil: (userId: string) => Promise<Perfil | null>; //Hacemos la función para cargar el perfil del usuario usando su ID
 };
 
@@ -38,9 +28,7 @@ const AuthContext = createContext<AuthContextType | null>(null); // Con esto vam
 export function AuthProvider({ children }: { children: React.ReactNode }) { // Aquí vamos a crear el proveedor del auth que tendrá la app
 
     const [session, setSession] = useState<Session | null>(null); // Creamos una constante de estado para guardar la sesión actual del usuario
-
     const [perfil, setPerfil] = useState<Perfil | null>(null); //Creamos una constante de estado para guardar el perfil del usuario actual
-
     const [loading, setLoading] = useState(true); // Creamos una variable de estado para sabir si la autenticación aún sigue cargando
 
     async function loadPerfil(userId: string) { // Crearemos una función asíncrona para cargar el perfil del usuario desde supabase
@@ -48,29 +36,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) { // A
         const { data, error } = await supabase //Hacemos la consulta SQL de perfiles a Supabase
 
             .from('perfiles') //Seleccionamos la tabla
-
             .select('id, usuario, rol, estado') //Seleccionamos las columnas
-
             .eq('id', userId) // Filtraremos el perfil donde el ID sea igual que el ID del usuario autenticado
-
             .single(); // con esto indicamos que solo esperamos recibir un registro (una petición)
 
 
         if (error) { //Manejo de errores
 
             console.log('Error cargando perfil:', error.message); //msg de la consola para mostrar el error
-
             setPerfil(null); // Limpiamos el perfil guardado en el estado
-
             return null; //retornamos nulo porque no se pudo cargar el perfil
         }
 
         const userPerfil = data as Perfil; //Convertirá los datos recibidos desde supabase a tipo Perfil
 
         setPerfil(userPerfil); //guarda el perfil cargado en el estado
-
         return userPerfil; //retorna el perfil cargado
     }
+
 
     useEffect(() => { //Ejecuta toda la lógica de manera automática cuando el componente AuthProvider se monta
 

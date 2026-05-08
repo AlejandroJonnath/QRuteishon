@@ -1,36 +1,161 @@
-import { View, Text, TouchableOpacity } from 'react-native';
-import { styles } from '../_styles/clienteStyles';
+import { ScrollView, View, Text, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRequireRole } from '../../hooks/useRequireRole';
 import { useClienteLogic } from '../../hooks/useClienteLogic';
+import { styles } from '../_styles/clienteStyles';
 
 export default function ClientePanel() {
-    const { perfil, loading, handleLogout } = useClienteLogic();
+    const { loading } = useRequireRole('cliente');
 
-    if (loading || !perfil) {
+    const {
+        perfil,
+        billetera,
+        movimientos,
+        cupones,
+        loadingData,
+        cargarDatosCliente,
+        handleLogout,
+        irARecargar,
+        irAPagarQr,
+    } = useClienteLogic();
+
+    if (loading || loadingData) {
         return (
-            <View style={styles.container}>
-                <Text>Cargando panel...</Text>
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator color="#00E676" size="large" />
+                <Text style={{ color: '#FFFFFF', marginTop: 12 }}>Cargando panel...</Text>
             </View>
         );
     }
 
-    return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Panel Cliente</Text>
-            <Text style={styles.text}>Bienvenido, {perfil.usuario}</Text>
-            <Text style={styles.text}>Rol: {perfil.rol}</Text>
+    const saldo = Number(billetera?.saldo || 0).toFixed(2);
+    const estadoTarjeta = billetera?.estado || 'sin billetera';
+    const numeroTarjeta = billetera?.numero_tarjeta || 'Sin tarjeta Q-Ruta';
 
-            <View style={styles.card}>
-                <Text style={styles.cardTitle}>Saldo Q-Ruta</Text>
-                <Text style={styles.balance}>$0.00</Text>
+    return (
+        <ScrollView
+            style={styles.container}
+            contentContainerStyle={styles.content}
+            refreshControl={
+                <RefreshControl
+                    refreshing={loadingData}
+                    onRefresh={cargarDatosCliente}
+                    tintColor="#00E676"
+                />
+            }
+        >
+            <View style={styles.header}>
+                <Text style={styles.greeting}>Hola, {perfil?.usuario}</Text>
+                <Text style={styles.title}>Panel Cliente</Text>
+                <Text style={styles.subtitle}>Paga combustible de forma rápida con QRuta.</Text>
             </View>
 
-            <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>Generar QR de pago</Text>
-            </TouchableOpacity>
+            <View style={styles.balanceCard}>
+                <Text style={styles.balanceLabel}>Saldo actual</Text>
+                <Text style={styles.balanceAmount}>${saldo}</Text>
+                <Text style={styles.balanceFooter}>Disponible para pagos con Tarjeta Q-Ruta</Text>
+            </View>
 
-            <TouchableOpacity onPress={handleLogout}>
-                <Text style={styles.logout}>Cerrar sesión</Text>
+            <View style={styles.actionRow}>
+                <TouchableOpacity style={styles.primaryButton} onPress={irAPagarQr} activeOpacity={0.85}>
+                    <Text style={styles.primaryButtonText}>Pagar con QR</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.secondaryButton} onPress={irARecargar} activeOpacity={0.85}>
+                    <Text style={styles.secondaryButtonText}>Recargar saldo</Text>
+                </TouchableOpacity>
+            </View>
+
+            <View style={styles.card}>
+                <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>Tarjeta Q-Ruta</Text>
+                    <Text style={styles.cardMuted}>Virtual</Text>
+                </View>
+
+                <View style={styles.virtualCard}>
+                    <View style={styles.virtualCardHeader}>
+                        <Ionicons name="card" size={22} color="#00E676" />
+                        <Text style={styles.virtualCardTitle}>Q-Ruta</Text>
+                    </View>
+                    <Text style={styles.qrCardNumber}>{numeroTarjeta}</Text>
+                </View>
+
+                <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Estado</Text>
+                    <Text style={styles.infoValue}>{estadoTarjeta}</Text>
+                </View>
+
+                <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Saldo de tarjeta</Text>
+                    <Text style={styles.infoValue}>${saldo}</Text>
+                </View>
+            </View>
+
+            <View style={styles.card}>
+                <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>Cupones disponibles</Text>
+                    <Text style={styles.cardMuted}>{cupones.length}</Text>
+                </View>
+
+                {cupones.length === 0 ? (
+                    <Text style={styles.emptyText}>No tienes cupones disponibles.</Text>
+                ) : (
+                    cupones.map((cupon) => (
+                        <View key={cupon.id} style={styles.couponItem}>
+                            <Text style={styles.couponCode}>{cupon.codigo}</Text>
+                            <Text style={styles.couponText}>
+                                {cupon.tipo_descuento === 'porcentaje'
+                                    ? `${cupon.valor_descuento}% de descuento`
+                                    : `$${Number(cupon.valor_descuento).toFixed(2)} de descuento`}
+                            </Text>
+                            <Text style={styles.couponText}>
+                                Código único y de un solo uso
+                            </Text>
+                        </View>
+                    ))
+                )}
+            </View>
+
+            <View style={styles.card}>
+                <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>Últimos movimientos</Text>
+                    <Text style={styles.cardMuted}>Recientes</Text>
+                </View>
+
+                {movimientos.length === 0 ? (
+                    <Text style={styles.emptyText}>Aún no tienes movimientos.</Text>
+                ) : (
+                    movimientos.map((movimiento) => {
+                        const monto = Number(movimiento.monto || 0);
+                        const esPositivo = monto >= 0;
+
+                        return (
+                            <View key={movimiento.id} style={styles.movementItem}>
+                                <View style={{ flex: 1, paddingRight: 12 }}>
+                                    <Text style={styles.movementTitle}>{movimiento.tipo}</Text>
+                                    <Text style={styles.movementDescription}>
+                                        {movimiento.descripcion || 'Movimiento QRuta'}
+                                    </Text>
+                                </View>
+
+                                <Text
+                                    style={
+                                        esPositivo
+                                            ? styles.movementAmountPositive
+                                            : styles.movementAmountNegative
+                                    }
+                                >
+                                    {esPositivo ? '+' : '-'}${Math.abs(monto).toFixed(2)}
+                                </Text>
+                            </View>
+                        );
+                    })
+                )}
+            </View>
+
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.85}>
+                <Text style={styles.logoutText}>Cerrar sesión</Text>
             </TouchableOpacity>
-        </View>
+        </ScrollView>
     );
 }

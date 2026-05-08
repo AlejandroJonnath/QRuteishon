@@ -1,228 +1,266 @@
-import { useState } from 'react'; //Para manejar estados dentro del hook
-import { Alert } from 'react-native'; //Para mostrar mensajes emergentes al usuario
-import { router } from 'expo-router'; //Para navegar entre pantallas
-import { supabase } from '../lib/supabase'; //Config de SupaBase
+import { useState } from 'react'; // Para manejar estados dentro del hook
+import { Alert } from 'react-native'; // Para mostrar mensajes emergentes al usuario
+import { router } from 'expo-router'; // Para navegar entre pantallas
+import { supabase } from '../lib/supabase'; // Configuración de Supabase
 
+type Rol = 'cliente' | 'operador' | 'admin'; // Definimos los roles permitidos
 
-type Rol = 'cliente' | 'operador' | 'admin'; //Definimos los roles
+export function useLogin() {
+    // Estados para el formulario de registro
+    const [usuario, setUsuario] = useState('');
+    const [cedula, setCedula] = useState('');
+    const [nombre, setNombre] = useState('');
+    const [apellido, setApellido] = useState('');
+    const [telefono, setTelefono] = useState('');
 
+    // Estados para correo y contraseña
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
-export function useLogin() { //Creamos un hook para el login
+    // Estado para saber si se está cargando el login o registro
+    const [loading, setLoading] = useState(false);
 
-    const [usuario, setUsuario] = useState('');// Constante de estado para guardar el nombre ingresado en el registro
-    const [email, setEmail] = useState('');// Constante de estado para guardar el correo ingresado
-    const [password, setPassword] = useState(''); // Constante de estado para guardar la contraseña ingresada
-    const [loading, setLoading] = useState(false); // Constante de estado para indicar si se está cargando la operación de login o el de registro
-    const [modoRegistro, setModoRegistro] = useState(false); //Constante para saber si el formulario está en modo de registrar o en modo de iniciar sesión
+    // Estado para saber si el formulario está en modo registro o inicio de sesión
+    const [modoRegistro, setModoRegistro] = useState(false);
 
+    // Estado para saber en qué fase del registro estamos (1 o 2)
+    const [registroFase, setRegistroFase] = useState(1);
 
-    async function redirectByRole(userId: string) { //Creamos una función asíncrona para redirigir al usuario según su rol
+    // Función para redirigir al usuario según el rol guardado en la tabla perfiles
+    async function redirectByRole(userId: string) {
+        const { data: perfil, error } = await supabase
+            .from('perfiles')
+            .select('id, usuario, rol, estado')
+            .eq('id', userId)
+            .single();
 
-        const { data: perfil, error } = await supabase // Hacemos la consulta en Supabase
-
-            .from('perfiles') //Seleccionamos la tabla
-            .select('id, usuario, rol, estado') //Seleccionamos las columnas     
-            .eq('id', userId) //Filtramos el perfil mediante el ID, tiene que coincidir con el ID del usuario autenticado
-            .single(); // Indica que solo puede recibir un registro
-
-
-        if (error || !perfil) { //Validamos si hubo un error al encontrar el perfil 
-
+        if (error || !perfil) {
             Alert.alert(
                 'Perfil no encontrado',
-                'El usuario existe en Auth, pero no tiene perfil en la tabla perfiles.'
+                'El usuario existe en Auth, pero todavía no se encontró su perfil. Intenta iniciar sesión nuevamente.'
             );
-
-            return;// Detiene la ejecución de la función
+            return;
         }
 
-        // Verifica si el estado del perfil no es activo
-        if (perfil.estado !== 'activo') { //Validación en caso de si el estado de perfil no está activo
-
+        if (perfil.estado !== 'activo') {
             Alert.alert(
                 'Cuenta inactiva',
                 'Tu cuenta está desactivada. Contacta al administrador.'
             );
 
-            await supabase.auth.signOut(); //Va a cerrar la sesión del usuario 
-            return;// Detiene la ejecución de la función
+            await supabase.auth.signOut();
+            return;
         }
 
-        const rol = perfil.rol as Rol; //Convertiremos el rol obtenido desde Supabase al tipo "Rol" (al inicio pusimos eso de type Rol = 'cliente' | 'operador' | 'admin';)
+        const rol = perfil.rol as Rol;
 
-
-        if (rol === 'admin') { // Verifica si el rol del usuario es administrador
-
-            router.replace('/administrador'); //le manda al panel del admin
-
-        } else if (rol === 'operador') { // Verifica si el rol del usuario es operador
-
-            router.replace('/operador');//le manda al panel del operador
-
-        } else { // Si no es admin ni operador, se asume que es cliente
-
-            router.replace('/cliente'); //le manda al panel del cliente
+        if (rol === 'admin') {
+            router.replace('/administrador');
+        } else if (rol === 'operador') {
+            router.replace('/operador');
+        } else {
+            router.replace('/cliente');
         }
     }
 
-
-    async function handleLogin() { //Función asíncrona para iniciar sesión
-
-        if (!email.trim() || !password.trim()) { //Valida si el correo o contraseña están vacíos
-
+    // Función para iniciar sesión
+    async function handleLogin() {
+        if (!email.trim() || !password.trim()) {
             Alert.alert('Campos incompletos', 'Ingresa tu correo y contraseña.');
-            return;// Detiene la ejecución de la función
+            return;
         }
 
+        try {
+            setLoading(true);
 
-        try { //Creamos un try para manejar todos los errores que se me ocurrieron
-
-            setLoading(true);// Activa el estado de cargando
-
-
-            const { data, error } = await supabase.auth.signInWithPassword({ // Intentará iniciar sesión en Supabase con el correo y la contraseña
-
-                email: email.trim(), // Envía el correo sin espacios al inicio o final
-                password: password.trim(),// Envía la contraseña sin espacios al inicio o final
-
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password: password.trim(),
             });
 
-
-            if (error) { //Valida si Supabase devolvió un error al iniciar sesión
-
+            if (error) {
                 Alert.alert('Error al iniciar sesión', error.message);
                 return;
             }
 
-
-            if (!data.user) { //Valida si no se pudo obtener el usuario autenticado
-
+            if (!data.user) {
                 Alert.alert('Error', 'No se pudo obtener el usuario.');
                 return;
             }
 
-            await redirectByRole(data.user.id); //Redirige al usuario según su rol
-
-        } catch (error) { //Captura cualquier error ocurrido en el try
-
+            await redirectByRole(data.user.id);
+        } catch (error) {
             console.log(error);
             Alert.alert('Error inesperado', 'Ocurrió un problema al iniciar sesión.');
-
-        } finally { //Se ejecutará siempre, existan errores o no
-
-            setLoading(false);// Desactiva el estado de carga
-
+        } finally {
+            setLoading(false);
         }
     }
 
-    async function handleRegister() { //Creamos una función asíncrona que se encargará de registrar al usuario 
-
-        if (!usuario.trim() || !email.trim() || !password.trim()) { // Validará si el nombre de usuario, correo o contraseña están vacíos
-
-            Alert.alert('Campos incompletos', 'Ingresa tu nombre, correo y contraseña.');
+    // Avanzar a la fase 2 del registro
+    function siguienteFase() {
+        if (!usuario.trim() || !email.trim() || !password.trim()) {
+            Alert.alert('Campos incompletos', 'Ingresa usuario, correo y contraseña para continuar.');
             return;
         }
 
-
-        if (password.trim().length < 6) { //Valida si la contraseña tiene menos de 6 caracteres (debe ser de 8 si o si)
-
+        if (password.trim().length < 6) {
             Alert.alert('Contraseña débil', 'La contraseña debe tener al menos 6 caracteres.');
             return;
         }
 
+        setRegistroFase(2);
+    }
 
-        try { //Creamos un try para el manejo de errores
+    // Volver a la fase 1 del registro
+    function faseAnterior() {
+        setRegistroFase(1);
+    }
 
-            setLoading(true);// Activa el estado de carga
+    // Función para registrar un nuevo usuario
+    async function handleRegister() {
+        if (
+            !usuario.trim() ||
+            !cedula.trim() ||
+            !nombre.trim() ||
+            !apellido.trim() ||
+            !telefono.trim() ||
+            !email.trim() ||
+            !password.trim()
+        ) {
+            Alert.alert(
+                'Campos incompletos',
+                'Ingresa todos tus datos personales, correo y contraseña.'
+            );
+            return;
+        }
 
-            const { data, error } = await supabase.auth.signUp({ //Creamos un nuevo usuario en Supabase auth con correo y contraseña
+        if (password.trim().length < 6) {
+            Alert.alert(
+                'Contraseña débil',
+                'La contraseña debe tener al menos 6 caracteres.'
+            );
+            return;
+        }
 
-                email: email.trim(), //Enviamos el correo sin espacios al inicio o al final
-                password: password.trim(),//Enviamos la contraseña sin espacios al inicio o al final
+        try {
+            setLoading(true);
 
+            /*
+                Aquí se crea el usuario en Supabase Auth.
+
+                Importante:
+                Ya NO insertamos manualmente en la tabla perfiles.
+                Los datos personales se mandan en options.data.
+                El trigger que hicimos en Supabase toma estos datos y crea automáticamente
+                el perfil en la tabla perfiles usando el mismo id del usuario.
+            */
+            const { data, error } = await supabase.auth.signUp({
+                email: email.trim(),
+                password: password.trim(),
+                options: {
+                    data: {
+                        usuario: usuario.trim(),
+                        cedula: cedula.trim(),
+                        nombre: nombre.trim(),
+                        apellido: apellido.trim(),
+                        telefono: telefono.trim(),
+                        correo: email.trim(),
+                    },
+                },
             });
 
-
-            if (error) { //Valida si Supabase devuelve un error al registrar 
-
+            if (error) {
                 Alert.alert('Error al registrarse', error.message);
                 return;
             }
 
-            if (!data.user) { //Valida si no se pudo crear u obtener el usuario
-
+            if (!data.user) {
                 Alert.alert('Error', 'No se pudo crear el usuario.');
                 return;
-
             }
 
-            const { error: perfilError } = await supabase //Insertamos el perfil del nuevo usuario en la tabla
+            /*
+                Si tienes desactivada la confirmación de correo en Supabase,
+                normalmente Supabase inicia sesión automáticamente y se puede redirigir.
 
-                .from('perfiles') // Selecciona la tabla perfiles
+                Si tienes activada la confirmación por correo, data.session puede venir null,
+                por lo que el usuario deberá confirmar su correo e iniciar sesión después.
+            */
+            if (!data.session) {
+                Alert.alert(
+                    'Cuenta creada',
+                    'Tu cuenta fue creada correctamente. Revisa tu correo si Supabase solicita confirmación y luego inicia sesión.'
+                );
 
-                .insert({ // Inserta una nueva fila en la tabla perfiles
-
-                    id: data.user.id,// Guardamos el mismo id del usuario creado en Supabase Auth
-
-                    usuario: usuario.trim(),// Guarda el nombre de usuario ingresado, sin espacios al inicio o final
-
-                    rol: 'cliente',//Asigna el rol por defecto (que es cliente) a los usuarios registrados desde la app
-
-                    estado: 'activo', // Asigna el estado activo al nuevo usuario
-                });
-
-            if (perfilError) { // Valida si ocurrió un error al crear el perfíl
-
-                Alert.alert('Usuario creado, pero falta perfil', perfilError.message);
+                setModoRegistro(false);
+                limpiarFormulario();
                 return;
             }
 
-            Alert.alert('Cuenta creada', 'Tu cuenta fue creada correctamente.'); //Muestra una alerta en caso que se haya registrado bien
-            await redirectByRole(data.user.id); //Redirige al usuario recién creado según su rol
+            Alert.alert(
+                'Cuenta creada',
+                'Tu cuenta fue creada correctamente.'
+            );
 
-        } catch (error) { //Capturamos los errores del try
+            await redirectByRole(data.user.id);
+        } catch (error) {
             console.log(error);
             Alert.alert('Error inesperado', 'Ocurrió un problema al registrarse.');
-
-
-        } finally {  // Se ejecuta siempre, haya error o no
-            setLoading(false);// Desactiva el estado de carga
+        } finally {
+            setLoading(false);
         }
     }
 
-
-    function limpiarFormulario() { //Función para limpiar los campos del formulario
-
-        setUsuario(''); // Limpia el campo usuari
-        setEmail(''); // Limpia el campo email
-        setPassword(''); // Limpia el campo password
-
+    // Limpia todos los campos del formulario
+    function limpiarFormulario() {
+        setUsuario('');
+        setCedula('');
+        setNombre('');
+        setApellido('');
+        setTelefono('');
+        setEmail('');
+        setPassword('');
+        setRegistroFase(1);
     }
 
-    function cambiarModo() { //Función para cambiar entre modo login y modo registro
-
-        limpiarFormulario();// Limpia todos los campos del formulario
-        setModoRegistro(!modoRegistro); // Cambia el valor de modoRegistro al contrario del valor actual
-
+    // Cambia entre modo login y modo registro
+    function cambiarModo() {
+        limpiarFormulario();
+        setModoRegistro(!modoRegistro);
+        setRegistroFase(1);
     }
 
+    return {
+        usuario,
+        setUsuario,
 
-    return { // Retorna todos los estados y funciones que usará la pantalla de login
+        cedula,
+        setCedula,
 
-        usuario, // Devuelve el valor actual del usuario 
-        setUsuario, // Devuelve la función para actualizar el usuario
+        nombre,
+        setNombre,
 
-        email, // Devuelve el valor actual del email
-        setEmail, // Devuelve la función para actualizar el email
+        apellido,
+        setApellido,
 
-        password, // Devuelve el valor actual de la contraseña
-        setPassword, // Devuelve la función para actualizar la contraseña
+        telefono,
+        setTelefono,
 
-        loading, // Devuelve el estado de carga
-        modoRegistro, // Devuelve si está en modo registro o no
+        email,
+        setEmail,
 
-        handleLogin, // Devuelve la función para iniciar sesión
-        handleRegister, // Devuelve la función para registrar usuario
-        cambiarModo, // Devuelve la función para cambiar entre login y registro
+        password,
+        setPassword,
+
+        loading,
+        modoRegistro,
+        registroFase,
+
+        handleLogin,
+        handleRegister,
+        siguienteFase,
+        faseAnterior,
+        cambiarModo,
     };
 }
