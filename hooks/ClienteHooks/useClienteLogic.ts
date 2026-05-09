@@ -1,9 +1,9 @@
 import { router, type Href } from 'expo-router';
-import { useRequireRole } from './useRequireRole';
-import { useAuth } from '../context/AuthContext';
+import { useRequireRole } from '../useRequireRole';
+import { useAuth } from '../../context/AuthContext';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 
 type Billetera = {

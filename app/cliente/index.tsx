@@ -1,8 +1,9 @@
 import { ScrollView, View, Text, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useRequireRole } from '../../hooks/useRequireRole';
-import { useClienteLogic } from '../../hooks/useClienteLogic';
-import { styles } from '../_styles/clienteStyles';
+import { useClienteLogic } from '../../hooks/ClienteHooks/useClienteLogic';
+import { styles } from '../_styles/ClienteStyles/clienteStyles';
 
 export default function ClientePanel() {
     const { loading } = useRequireRole('cliente');
@@ -41,11 +42,12 @@ export default function ClientePanel() {
                     refreshing={loadingData}
                     onRefresh={cargarDatosCliente}
                     tintColor="#00E676"
+                    colors={['#00E676']}
                 />
             }
         >
             <View style={styles.header}>
-                <Text style={styles.greeting}>Hola, {perfil?.usuario}</Text>
+                <Text style={styles.greeting}>Hola, {perfil?.usuario || 'Cliente'}</Text>
                 <Text style={styles.title}>Panel Cliente</Text>
                 <Text style={styles.subtitle}>Paga combustible de forma rápida con QRuta.</Text>
             </View>
@@ -65,6 +67,20 @@ export default function ClientePanel() {
                     <Text style={styles.secondaryButtonText}>Recargar saldo</Text>
                 </TouchableOpacity>
             </View>
+
+            <TouchableOpacity
+                style={styles.fullButton}
+                onPress={() => router.push('/cliente/metodos-pagos')}
+                activeOpacity={0.85}
+            >
+                <Ionicons
+                    name="card-outline"
+                    size={20}
+                    color="#FFFFFF"
+                    style={styles.fullButtonIcon}
+                />
+                <Text style={styles.fullButtonText}>Agregar método de pago</Text>
+            </TouchableOpacity>
 
             <View style={styles.card}>
                 <View style={styles.cardHeader}>

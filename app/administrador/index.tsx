@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity } from 'react-native';
-import { styles } from '../_styles/administradorStyles';
-import { useAdministradorLogic } from '../../hooks/useAdministradorLogic';
+import { styles } from '../_styles/AdminStyles/administradorStyles';
+import { useAdministradorLogic } from '../../hooks/AdminHooks/useAdministradorLogic';
 
 export default function AdminPanel() {
     const { perfil, loading, handleLogout } = useAdministradorLogic();

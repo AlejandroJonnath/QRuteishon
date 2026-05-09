@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
-import { useRequireRole } from './useRequireRole';
-import { useAuth } from '../context/AuthContext';
+import { useRequireRole } from '../useRequireRole';
+import { useAuth } from '../../context/AuthContext';
 
 export function useAdministradorLogic() {
     const { perfil, loading } = useRequireRole('admin');

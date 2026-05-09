@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Alert } from 'react-native';
 import { useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import { router } from 'expo-router';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 
 export type PagoQr = {
     id: string;

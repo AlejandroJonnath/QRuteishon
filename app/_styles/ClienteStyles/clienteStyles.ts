@@ -54,7 +54,7 @@ export const styles = StyleSheet.create({
     actionRow: {
         flexDirection: 'row',
         gap: 12,
-        marginBottom: 18,
+        marginBottom: 12,
     },
     primaryButton: {
         flex: 1,
@@ -80,6 +80,25 @@ export const styles = StyleSheet.create({
         fontSize: 15,
     },
     secondaryButtonText: {
+        color: '#FFFFFF',
+        fontWeight: '800',
+        fontSize: 15,
+    },
+    fullButton: {
+        height: 56,
+        backgroundColor: 'rgba(255,255,255,0.09)',
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.12)',
+        marginBottom: 18,
+        flexDirection: 'row',
+    },
+    fullButtonIcon: {
+        marginRight: 8,
+    },
+    fullButtonText: {
         color: '#FFFFFF',
         fontWeight: '800',
         fontSize: 15,
@@ -212,3 +231,6 @@ export const styles = StyleSheet.create({
         fontSize: 15,
     },
 });
+
+// Added to prevent Expo Router crash
+export default function DummyRoute() { return null; }

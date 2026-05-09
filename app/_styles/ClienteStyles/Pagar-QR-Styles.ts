@@ -95,3 +95,7 @@ export const styles = StyleSheet.create({
         fontWeight: '800',
     },
 });
+
+
+// Added to prevent Expo Router crash
+export default function DummyRoute() { return null; }

@@ -7,8 +7,8 @@ import {
 import { router } from 'expo-router';
 import { CameraView } from 'expo-camera';
 import { useRequireRole } from '../../hooks/useRequireRole';
-import { usePagarQr } from '../../hooks/UsePagarQr';
-import { styles } from '../_styles/Pagar-QR-Styles';
+import { usePagarQr } from '../../hooks/ClienteHooks/UsePagarQr';
+import { styles } from '../_styles/ClienteStyles/Pagar-QR-Styles';
 
 export default function PagarQr() {
     useRequireRole('cliente');

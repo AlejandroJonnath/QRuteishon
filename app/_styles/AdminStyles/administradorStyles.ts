@@ -16,12 +16,22 @@ export const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 6,
     },
+    card: {
+        backgroundColor: '#f3f4f6',
+        borderRadius: 16,
+        padding: 20,
+        marginVertical: 24,
+    },
+    cardTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 12,
+    },
     button: {
         backgroundColor: '#111827',
         padding: 15,
         borderRadius: 12,
         alignItems: 'center',
-        marginTop: 24,
     },
     buttonText: {
         color: '#fff',
@@ -34,3 +44,7 @@ export const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 });
+
+
+// Added to prevent Expo Router crash
+export default function DummyRoute() { return null; }
