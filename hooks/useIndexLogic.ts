@@ -1,56 +1,71 @@
-import { useEffect } from 'react'; // Usare esto para cambiar ciertos valores después
-import { router } from 'expo-router'; //lo usaré para redirigir al usuario entre pantallas
-import { useAuth } from '../context/AuthContext'; //Importamos el hook para autenticar
+// Importamos useEffect de React para ejecutar cosas cuando cambian ciertos datos
+import { useEffect } from 'react';
+// Importamos router de expo para poder mover al usuario de una pantalla a otra
+import { router } from 'expo-router';
+// Nos traemos el hook de autenticación para saber quién está logueado
+import { useAuth } from '../context/AuthContext';
 
-export function useIndexLogic() { //Creamos el hook para poder hacer el movimiento de páneles
+// Creamos nuestro hook que se encarga de mandar a cada quien a su panel
+export function useIndexLogic() {
 
-    const { session, perfil, loading } = useAuth(); //Obtenemos la sesión actual, el perfil del usuario y el estado de carga desde el contexto de auth
+    // Sacamos la sesión, el perfil y si está cargando desde el contexto de autenticación
+    // (esto nos dice si el usuario existe y qué rol tiene)
+    const { session, perfil, loading } = useAuth();
 
-    useEffect(() => { //Ejecutamos esta lógica cada vez que cambien de sesión, perfil o carga
+    // Usamos useEffect para que esta lógica corra cada vez que cambie algo de la sesión o el perfil
+    useEffect(() => {
 
-        if (loading) return; //En caso que siga cargando la info de auth, no hará nada aún
+        // Si todavía está cargando la info de auth no hacemos nada y esperamos
+        if (loading) return;
 
 
-        if (!session) { //En caso que no exista una sesión activa, le manda al login al usuario
-
-            router.replace('/login'); //Reemplaza la pantalla actual de la app por el login de la app
+        // Si no hay ninguna sesión activa mandamos al usuario de una a que inicie sesión
+        if (!session) {
+            
+            // Reemplazamos la pantalla actual por el login (para que no pueda volver atrás con el botón del celu)
+            router.replace('/login');
             return;
         }
 
 
-        if (!perfil) { //Si no existe un perfil, redirige al usuario para el login
+        // Si inició sesión pero por alguna razón no tiene perfil también lo mandamos al login
+        if (!perfil) {
 
             router.replace('/login');
             return;
         }
 
 
-        if (perfil.estado !== 'activo') { // Si el perfil no está activo, se redirige al login
+        // Verificamos si la cuenta está activa (si lo suspendieron, lo mandamos a volar al login)
+        if (perfil.estado !== 'activo') {
 
             router.replace('/login');
             return;
         }
 
 
-        if (perfil.rol === 'admin') {// Validación si el rol del usuario es Admin
+        // Si el usuario tiene rol de admin lo mandamos a su panel de administración
+        if (perfil.rol === 'admin') {
 
-            router.replace('/administrador'); // Redirige al panel del administrador
-
-
-        } else if (perfil.rol === 'operador') { // Valida si el rol del usuario es Operador
-
-            router.replace('/operador'); // Redirige al panel del operador
+            router.replace('/administrador');
 
 
-        } else { // Si no es admin ni operador, se asume que es cliente
+        // Si es operador lo mandamos al panel de operador
+        } else if (perfil.rol === 'operador') {
 
-            router.replace('/cliente'); // Redirige al panel del cliente
+            router.replace('/operador');
+
+
+        // Si no es ni admin ni operador asumimos que es cliente y lo mandamos para allá
+        } else {
+
+            router.replace('/cliente');
 
         }
 
-        // Lista de dependencias: el efecto se vuelve a ejecutar si cambia alguno de estos valores
+        // Le pasamos las dependencias al useEffect (se vuelve a ejecutar si cambia alguna de estas)
     }, [session, perfil, loading]);
 
-    // Retorna un objeto vacío porque este hook solo se encarga de la lógica de redirección
+    // Retornamos un objeto vacío porque este hook solo hace las redirecciones y no devuelve datos
     return {};
 }

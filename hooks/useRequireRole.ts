@@ -1,44 +1,61 @@
-import { useEffect } from 'react'; //usaremos useEffect para ejecutar la lógica cuando cambien ciertos valores
-import { router } from 'expo-router';// Importamos el router de expo para redirigir al user entre pantallas
-import { useAuth } from '../context/AuthContext'; //Importamos el hook que hicimos en context para acceder a la sesión, perfíl y el estado de carga
+// Importamos useEffect para correr nuestra lógica cada vez que cambien los datos importantes
+import { useEffect } from 'react';
+// Importamos el router de expo para mandar al usuario a otra pantalla si no tiene el rol
+import { router } from 'expo-router';
+// Nos traemos nuestro hook de autenticación para ver quién está conectado y sus datos
+import { useAuth } from '../context/AuthContext';
 
 
-type Rol = 'cliente' | 'operador' | 'admin'; //Definimos los roles
+// Definimos los tres roles que manejamos en la app para no equivocarnos al escribirlos
+type Rol = 'cliente' | 'operador' | 'admin';
 
 
-export function useRequireRole(requiredRole: Rol) { //Vamos a crear un hook que exija al usuario tener un rol específico
+// Creamos un hook que funciona como un cadenero (exige un rol específico para dejarte pasar)
+export function useRequireRole(requiredRole: Rol) {
 
-    const { session, perfil, loading } = useAuth(); //Obtendremos la sesión, el eprfil y el estado de carga del contexto del auth
+    // Sacamos la sesión, el perfil y si está cargando desde nuestro contexto de autenticación
+    const { session, perfil, loading } = useAuth();
 
-    useEffect(() => { //Ejecutaremos las validaciones cada vez que cambie de sesión, perfil, carga y requerimiento del rol
+    // Usamos useEffect para validar todo cada vez que cambie algo (como si el usuario se desloguea)
+    useEffect(() => {
 
-        if (loading) return; //esperará si sigue cargando
+        // Si todavía está cargando esperamos un ratito y no hacemos nada
+        if (loading) return;
 
 
-        if (!session) { //Si no hay sesión activa, redirige al user al login
+        // Si vemos que no hay nadie conectado lo mandamos volando al login
+        if (!session) {
 
-            router.replace('/login'); //con esto le mandamos para el login xd
-            return; //detiene la ejecución para que no siga validando
+            // El replace hace que no puedan volver atrás con el botón del teléfono
+            router.replace('/login');
+            // Cortamos acá para que no siga leyendo el código
+            return;
         }
 
-        if (!perfil) { //Si no existe perfil cargado, le manda al login
+        // Si por alguna razón no se cargó el perfil también lo mandamos al login
+        if (!perfil) {
 
             router.replace('/login');
             return;
         }
 
-        if (perfil.estado !== 'activo') { //Si el perfil del usuario no está activo, lo manda al login
+        // Si la cuenta está desactivada o suspendida lo mandamos de vuelta al login
+        if (perfil.estado !== 'activo') {
 
             router.replace('/login');
             return;
         }
 
-        if (perfil.rol !== requiredRole) { // Si el rol del perfil no coincide con el rol requerido, lo manda al incio de su panel
+        // Acá viene lo importante (si el rol que tiene no es el que pedimos lo mandamos al inicio)
+        if (perfil.rol !== requiredRole) {
 
-            router.replace('/'); // esto es para mandarle al inicio cuando tenga la sesión cargada, así le mandará directamente a su panel en caso que sea otro rol
+            // Mandarlo a la raíz hace que el index se encargue de mandarlo a su panel correcto
+            router.replace('/');
         }
 
-    }, [session, perfil, loading, requiredRole]); //listamos las dependencias: el efecto se vuelve a ejecutar si cambia alguno de estos valores
+    // Le pasamos las dependencias para que vuelva a chequear si cambia alguna de estas variables
+    }, [session, perfil, loading, requiredRole]);
 
-    return { session, perfil, loading }; //Retornamos la sesión, el perfil y el estado de carga para usarlos en el componente que vaya a llamar a este hook
+    // Retornamos estos datos por si el componente que usa el hook los necesita para mostrar algo
+    return { session, perfil, loading };
 }
