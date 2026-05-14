@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { CustomAlert } from '../../utils/AlertManager';
+
+import { useAuth } from '../../context/AuthContext';
 import { AdminService } from '../../services/AdminService';
 import { generarTokenQr } from '../../utils/generators'; // Usaremos esto también para generar códigos aleatorios
 import { obtenerRangoMesActual } from '../../utils/dateHelpers';
@@ -18,6 +20,9 @@ export type CuponGlobal = {
 };
 
 export function useAdminCupones() {
+    const { session } = useAuth();
+    const adminId = session?.user?.id;
+
     const [cupones, setCupones] = useState<CuponGlobal[]>([]);
     
     // Estados para la generación manual/automática
@@ -37,14 +42,14 @@ export function useAdminCupones() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudieron cargar los cupones.');
+                CustomAlert.alert('Error', 'No se pudieron cargar los cupones.');
                 return;
             }
 
             setCupones((data || []) as CuponGlobal[]);
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cargar los cupones.');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cargar los cupones.');
         } finally {
             setLoadingData(false);
         }
@@ -55,22 +60,27 @@ export function useAdminCupones() {
     }, [cargarCupones]);
 
     async function generarLoteCupones() {
+        if (!adminId) {
+            CustomAlert.alert('Error', 'No se pudo obtener el usuario administrador.');
+            return;
+        }
+
         const cant = parseInt(cantidad, 10);
         const val = parseFloat(valorDescuento);
         const dias = parseInt(diasValidez, 10);
 
         if (isNaN(cant) || cant <= 0 || cant > 100) {
-            Alert.alert('Cantidad inválida', 'Puedes generar entre 1 y 100 cupones a la vez.');
+            CustomAlert.alert('Cantidad inválida', 'Puedes generar entre 1 y 100 cupones a la vez.');
             return;
         }
 
         if (isNaN(val) || val <= 0) {
-            Alert.alert('Valor inválido', 'El descuento debe ser mayor a 0.');
+            CustomAlert.alert('Valor inválido', 'El descuento debe ser mayor a 0.');
             return;
         }
 
         if (isNaN(dias) || dias < 1) {
-            Alert.alert('Días inválidos', 'El cupón debe durar al menos 1 día.');
+            CustomAlert.alert('Días inválidos', 'El cupón debe durar al menos 1 día.');
             return;
         }
 
@@ -84,8 +94,8 @@ export function useAdminCupones() {
             const cuponesNuevos = Array.from({ length: cant }).map(() => ({
                 // Usamos nuestro generator y le agregamos un prefijo ADMIN
                 codigo: `ADMIN-${generarTokenQr().split('-')[2]}`,
-                propietario_id: null, // Cupones globales que cualquiera puede usar
-                propietario_rol: null,
+                propietario_id: adminId, // Usamos el ID del administrador
+                propietario_rol: 'admin',
                 tipo_descuento: tipoDescuento,
                 valor_descuento: val,
                 uso_unico: true,
@@ -97,11 +107,11 @@ export function useAdminCupones() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudieron generar los cupones.');
+                CustomAlert.alert('Error', 'No se pudieron generar los cupones.');
                 return;
             }
 
-            Alert.alert('Cupones generados', `Se crearon exitosamente ${cant} cupones.`);
+            CustomAlert.alert('Cupones generados', `Se crearon exitosamente ${cant} cupones.`);
             
             // Limpiamos form
             setCantidad('1');
@@ -110,7 +120,7 @@ export function useAdminCupones() {
             await cargarCupones();
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al generar los cupones.');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al generar los cupones.');
         } finally {
             setLoadingAction(false);
         }
@@ -124,14 +134,14 @@ export function useAdminCupones() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudo cambiar el estado del cupón.');
+                CustomAlert.alert('Error', 'No se pudo cambiar el estado del cupón.');
                 return;
             }
 
             await cargarCupones();
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cambiar el estado.');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cambiar el estado.');
         } finally {
             setLoadingAction(false);
         }

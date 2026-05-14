@@ -8,7 +8,7 @@ export const AuthService = {
     obtenerPerfil: async (userId: string) => {
         const { data, error } = await supabase
             .from('perfiles')
-            .select('id, usuario, rol, estado, gasolinera_id')
+            .select('id, usuario, rol, estado, gasolinera_id, cedula, nombre, apellido, telefono, correo')
             .eq('id', userId)
             // (single() asegura que solo nos devuelva un objeto y no un arreglo, si no lo encuentra tira error)
             .single();

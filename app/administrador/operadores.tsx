@@ -6,7 +6,9 @@ import {
     ScrollView,
     RefreshControl,
     TextInput,
+    Modal,
 } from 'react-native';
+import React, { useState } from 'react';
 import { router } from 'expo-router';
 import { useRequireRole } from '../../hooks/useRequireRole';
 import { useAdminOperadores } from '../../hooks/AdminHooks/useAdminOperadores';
@@ -15,8 +17,11 @@ import { styles } from '../_styles/AdminStyles';
 export default function AdminOperadores() {
     useRequireRole('admin');
 
+    const [modalGasolineraVisible, setModalGasolineraVisible] = useState(false);
+
     const {
         operadores,
+        gasolineras,
         operadorSeleccionado,
         usuario,
         setUsuario,
@@ -144,8 +149,49 @@ export default function AdminOperadores() {
                 <Text style={styles.label}>Correo</Text>
                 <TextInput style={styles.input} value={correo} onChangeText={setCorreo} placeholder="Correo" placeholderTextColor="#6B7280" keyboardType="email-address" autoCapitalize="none" />
 
-                <Text style={styles.label}>ID Gasolinera (Obligatorio)</Text>
-                <TextInput style={styles.input} value={gasolineraId} onChangeText={setGasolineraId} placeholder="UUID de la gasolinera" placeholderTextColor="#6B7280" />
+                <Text style={styles.label}>Gasolinera (Obligatorio)</Text>
+                <TouchableOpacity 
+                    style={[styles.input, { justifyContent: 'center' }]} 
+                    onPress={() => setModalGasolineraVisible(true)}
+                >
+                    <Text style={{ color: gasolineraId ? '#FFFFFF' : '#6B7280' }}>
+                        {gasolineras.find(g => g.id === gasolineraId)?.nombre || "Seleccionar Gasolinera"}
+                    </Text>
+                </TouchableOpacity>
+
+                <Modal
+                    visible={modalGasolineraVisible}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setModalGasolineraVisible(false)}
+                >
+                    <TouchableOpacity 
+                        style={styles.modalOverlay} 
+                        activeOpacity={1} 
+                        onPress={() => setModalGasolineraVisible(false)}
+                    >
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Selecciona una Gasolinera</Text>
+                            <ScrollView style={{ maxHeight: 300, width: '100%' }}>
+                                {gasolineras.map(g => (
+                                    <TouchableOpacity 
+                                        key={g.id} 
+                                        style={styles.modalItem}
+                                        onPress={() => {
+                                            setGasolineraId(g.id);
+                                            setModalGasolineraVisible(false);
+                                        }}
+                                    >
+                                        <Text style={styles.modalItemText}>{g.nombre}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setModalGasolineraVisible(false)}>
+                                <Text style={styles.modalCloseText}>Cancelar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
 
                 {!operadorSeleccionado && (
                     <>

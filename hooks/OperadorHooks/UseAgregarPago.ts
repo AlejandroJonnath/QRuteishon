@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert } from 'react-native';
+import { CustomAlert } from '../../utils/AlertManager';
+
 import { useAuth } from '../../context/AuthContext';
 import { PagosService } from '../../services/PagosService';
 import { CuponesService } from '../../services/CuponesService';
@@ -85,7 +86,7 @@ export function useAgregarPago() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudieron cargar los cupones del operador');
+                CustomAlert.alert('Error', 'No se pudieron cargar los cupones del operador');
                 return;
             }
 
@@ -98,7 +99,7 @@ export function useAgregarPago() {
             setCupones(cuponesDisponibles as CuponOperador[]);
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cargar los cupones');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cargar los cupones');
         } finally {
             setLoadingData(false);
         }
@@ -110,17 +111,17 @@ export function useAgregarPago() {
 
     async function generarPagoQr() {
         if (!operadorId) {
-            Alert.alert('Error', 'No se pudo obtener el operador actual');
+            CustomAlert.alert('Error', 'No se pudo obtener el operador actual');
             return;
         }
 
         if (!valor.trim() || Number.isNaN(valorNumerico) || valorNumerico <= 0) {
-            Alert.alert('Valor inválido', 'Ingresa un valor válido mayor a $0.00');
+            CustomAlert.alert('Valor inválido', 'Ingresa un valor válido mayor a $0.00');
             return;
         }
 
         if (totalCalculado <= 0) {
-            Alert.alert('Total inválido', 'El total a pagar no puede ser $0.00');
+            CustomAlert.alert('Total inválido', 'El total a pagar no puede ser $0.00');
             return;
         }
 
@@ -131,7 +132,7 @@ export function useAgregarPago() {
             const { data: perfilOperador, error: perfilError } = await AuthService.obtenerPerfil(operadorId);
 
             if (perfilError || !perfilOperador?.gasolinera_id) {
-                Alert.alert('Operador sin gasolinera', 'Este operador no tiene una gasolinera asignada');
+                CustomAlert.alert('Operador sin gasolinera', 'Este operador no tiene una gasolinera asignada');
                 return;
             }
 
@@ -162,15 +163,15 @@ export function useAgregarPago() {
 
             if (pagoError) {
                 console.log(pagoError.message);
-                Alert.alert('Error', 'No se pudo generar el pago QR');
+                CustomAlert.alert('Error', 'No se pudo generar el pago QR');
                 return;
             }
 
             setPagoGenerado(pago as PagoGenerado);
-            Alert.alert('QR generado', 'El cliente ya puede escanear este código desde su app');
+            CustomAlert.alert('QR generado', 'El cliente ya puede escanear este código desde su app');
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al generar el pago QR');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al generar el pago QR');
         } finally {
             setLoading(false);
         }

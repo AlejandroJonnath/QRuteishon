@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { CustomAlert } from '../../utils/AlertManager';
+
 import { useAuth } from '../../context/AuthContext';
 import { CuponesService } from '../../services/CuponesService';
 import { obtenerRangoMesActual } from '../../utils/dateHelpers';
@@ -39,14 +40,14 @@ export function useCuponesOperador() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudieron cargar los cupones');
+                CustomAlert.alert('Error', 'No se pudieron cargar los cupones');
                 return;
             }
 
             setCupones((data || []) as CuponOperador[]);
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cargar los cupones');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cargar los cupones');
         } finally {
             setLoadingData(false);
         }
@@ -58,7 +59,7 @@ export function useCuponesOperador() {
 
     async function crearCuponMensual() {
         if (!operadorId) {
-            Alert.alert('Error', 'No se pudo obtener el operador actual');
+            CustomAlert.alert('Error', 'No se pudo obtener el operador actual');
             return;
         }
 
@@ -77,12 +78,12 @@ export function useCuponesOperador() {
 
             if (existeError) {
                 console.log(existeError.message);
-                Alert.alert('Error', 'No se pudo validar el cupón mensual');
+                CustomAlert.alert('Error', 'No se pudo validar el cupón mensual');
                 return;
             }
 
             if (cuponExistente) {
-                Alert.alert(
+                CustomAlert.alert(
                     'Cupón ya creado',
                     `Ya tienes un cupón asignado este mes: ${cuponExistente.codigo}`
                 );
@@ -113,16 +114,16 @@ export function useCuponesOperador() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudo crear el cupón mensual');
+                CustomAlert.alert('Error', 'No se pudo crear el cupón mensual');
                 return;
             }
 
-            Alert.alert('Cupón creado', `Se creó tu cupón mensual: ${codigo}`);
+            CustomAlert.alert('Cupón creado', `Se creó tu cupón mensual: ${codigo}`);
 
             await cargarCupones();
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al crear el cupón');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al crear el cupón');
         } finally {
             setLoadingCrear(false);
         }

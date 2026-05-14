@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) { // A
 
     const [session, setSession] = useState<Session | null>(null); // Creamos una constante de estado para guardar la sesión actual del usuario
     const [perfil, setPerfil] = useState<Perfil | null>(null); //Creamos una constante de estado para guardar el perfil del usuario actual
-    const [loading, setLoading] = useState(true); // Creamos una variable de estado para sabir si la autenticación aún sigue cargando
+    const [loading, setLoading] = useState(true); // Creamos una variable de estado para salir si la autenticación aún sigue cargando
 
     async function loadPerfil(userId: string) { // Crearemos una función asíncrona para cargar el perfil del usuario desde supabase
 

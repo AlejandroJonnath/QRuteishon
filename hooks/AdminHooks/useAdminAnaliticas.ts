@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { CustomAlert } from '../../utils/AlertManager';
+
 import { AdminService } from '../../services/AdminService';
 
 export type PagoReciente = {
@@ -35,7 +36,7 @@ export function useAdminAnaliticas() {
 
             if (data.error) {
                 console.log(data.error.message);
-                Alert.alert('Error', 'No se pudieron cargar las analíticas.');
+                CustomAlert.alert('Error', 'No se pudieron cargar las analíticas.');
                 return;
             }
 
@@ -54,7 +55,7 @@ export function useAdminAnaliticas() {
 
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cargar las analíticas.');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cargar las analíticas.');
         } finally {
             setLoadingData(false);
         }

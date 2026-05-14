@@ -19,11 +19,21 @@ if (!supabaseAnonKey) { // Lo mismo de arriba pero con la clave pública de anon
 }
 
 
+// Verificamos si estamos en un entorno donde no hay "window" (como el Server-Side Rendering de Expo)
+const isSSR = Platform.OS === 'web' && typeof window === 'undefined';
+
+// Un storage de mentira para que Supabase no intente leer de AsyncStorage en el servidor (que rompe la app)
+const dummyStorage = {
+    getItem: () => null,
+    setItem: () => { },
+    removeItem: () => { },
+};
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, { //Crearemos y exportaremos el cliente de SupaBase para usarlo en toda la app
 
     auth: { //configuramos el módulo de auth de SupaBase
 
-        storage: AsyncStorage as any, //Usamos el AsyncStorage para guardar la sesión en el dispositivo
+        storage: isSSR ? dummyStorage : AsyncStorage as any, //Usamos el AsyncStorage, excepto en SSR donde usamos el dummy
 
         autoRefreshToken: true,//Haremos que SupaBase renueve automáticamente el token de iniciar sesión
 
@@ -49,3 +59,12 @@ if (Platform.OS !== 'web') { //Verificamos si la app no se está ejecutando en u
         }
     });
 }
+
+/*
+Cuando ejecutas la app con Expo en la terminal, Expo Router intenta "pre-renderizar" la aplicación o evaluar el código base en un entorno de Node.js en la computadora (no en un navegador web ni en un celular).
+En ese entorno de servidor no existe el objeto window. Sin embargo, AsyncStorage asume que sí existe al momento en que Supabase intentaba leer la sesión guardada (__loadSession), la librería de AsyncStorage trataba de acceder a window.localStorage y provocaba que toda la aplicación colapsara con el error ReferenceError: window is not defined.
+¿Cómo lo solucioné? Se tiene que modificar el archivo lib/supabase.ts.
+Tuve que añadir una verificación para detectar si la aplicación se está inicializando en este entorno de servidor (typeof window === 'undefined').
+Si es así, le pasamos a Supabase un dummy storage (un almacenamiento simulado vacío) en vez de AsyncStorage.
+De esta forma, Supabase no intenta buscar el window y la compilación pasa limpiamente. En celulares (iOS/Android) seguirá funcionando perfectamente con AsyncStorage.
+*/

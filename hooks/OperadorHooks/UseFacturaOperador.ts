@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { CustomAlert } from '../../utils/AlertManager';
+
 import { router } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { PagosService } from '../../services/PagosService';
@@ -49,14 +50,14 @@ export function useFacturaOperador() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudieron cargar los pagos aprobados');
+                CustomAlert.alert('Error', 'No se pudieron cargar los pagos aprobados');
                 return;
             }
 
-            setPagos((data || []) as PagoAprobado[]);
+            setPagos((data || []) as unknown as PagoAprobado[]);
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cargar pagos');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cargar pagos');
         } finally {
             setLoadingData(false);
         }
@@ -98,12 +99,12 @@ export function useFacturaOperador() {
 
     async function generarFactura() {
         if (!operadorId) {
-            Alert.alert('Error', 'No se pudo obtener el operador actual');
+            CustomAlert.alert('Error', 'No se pudo obtener el operador actual');
             return;
         }
 
         if (!pagoSeleccionado) {
-            Alert.alert('Pago requerido', 'Selecciona un pago aprobado para generar la factura');
+            CustomAlert.alert('Pago requerido', 'Selecciona un pago aprobado para generar la factura');
             return;
         }
 
@@ -114,7 +115,7 @@ export function useFacturaOperador() {
             !telefono.trim() ||
             !correo.trim()
         ) {
-            Alert.alert(
+            CustomAlert.alert(
                 'Campos incompletos',
                 'Completa cédula, nombre, apellido, teléfono y correo'
             );
@@ -129,12 +130,12 @@ export function useFacturaOperador() {
 
             if (facturaExistenteError) {
                 console.log(facturaExistenteError.message);
-                Alert.alert('Error', 'No se pudo validar si la factura ya existe');
+                CustomAlert.alert('Error', 'No se pudo validar si la factura ya existe');
                 return;
             }
 
             if (facturaExistente) {
-                Alert.alert('Factura existente', 'Este pago ya tiene una factura generada');
+                CustomAlert.alert('Factura existente', 'Este pago ya tiene una factura generada');
                 return;
             }
 
@@ -159,22 +160,24 @@ export function useFacturaOperador() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudo generar la factura');
+                CustomAlert.alert('Error', 'No se pudo generar la factura');
                 return;
             }
 
-            Alert.alert(
+            CustomAlert.alert(
                 'Factura generada',
                 'La factura fue emitida correctamente',
                 [{ text: 'Aceptar', onPress: () => router.replace('/operador') }]
             );
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al generar la factura');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al generar la factura');
         } finally {
             setLoadingFactura(false);
         }
     }
+
+    //pdf
 
     return {
         pagos,

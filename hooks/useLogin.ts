@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
+import { CustomAlert } from '../utils/AlertManager';
+
 import { router } from 'expo-router';
 import { AuthService } from '../services/AuthService';
 import type { Rol } from '../services/AuthService';
@@ -29,7 +30,7 @@ export function useLogin() {
         const { data: perfil, error } = await AuthService.obtenerPerfil(userId);
 
         if (error || !perfil) {
-            Alert.alert(
+            CustomAlert.alert(
                 'Perfil no encontrado',
                 'El usuario existe en Auth pero todavía no se encontró su perfil (intenta iniciar sesión nuevamente)'
             );
@@ -38,7 +39,7 @@ export function useLogin() {
 
         // Revisamos si no lo banearon
         if (perfil.estado !== 'activo') {
-            Alert.alert(
+            CustomAlert.alert(
                 'Cuenta inactiva',
                 'Tu cuenta está desactivada (contacta al administrador)'
             );
@@ -61,7 +62,7 @@ export function useLogin() {
 
     async function handleLogin() {
         if (!email.trim() || !password.trim()) {
-            Alert.alert('Campos incompletos', 'Ingresa tu correo y contraseña');
+            CustomAlert.alert('Campos incompletos', 'Ingresa tu correo y contraseña');
             return;
         }
 
@@ -75,19 +76,19 @@ export function useLogin() {
             );
 
             if (error) {
-                Alert.alert('Error al iniciar sesión', error.message);
+                CustomAlert.alert('Error al iniciar sesión', error.message);
                 return;
             }
 
             if (!data.user) {
-                Alert.alert('Error', 'No se pudo obtener el usuario');
+                CustomAlert.alert('Error', 'No se pudo obtener el usuario');
                 return;
             }
 
             await redirectByRole(data.user.id);
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al iniciar sesión');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al iniciar sesión');
         } finally {
             setLoading(false);
         }
@@ -95,12 +96,12 @@ export function useLogin() {
 
     function siguienteFase() {
         if (!usuario.trim() || !email.trim() || !password.trim()) {
-            Alert.alert('Campos incompletos', 'Ingresa usuario, correo y contraseña para continuar');
+            CustomAlert.alert('Campos incompletos', 'Ingresa usuario, correo y contraseña para continuar');
             return;
         }
 
         if (password.trim().length < 6) {
-            Alert.alert('Contraseña débil', 'La contraseña debe tener al menos 6 caracteres');
+            CustomAlert.alert('Contraseña débil', 'La contraseña debe tener al menos 6 caracteres');
             return;
         }
 
@@ -122,7 +123,7 @@ export function useLogin() {
             !email.trim() ||
             !password.trim()
         ) {
-            Alert.alert(
+            CustomAlert.alert(
                 'Campos incompletos',
                 'Ingresa todos tus datos personales, correo y contraseña'
             );
@@ -130,7 +131,7 @@ export function useLogin() {
         }
 
         if (password.trim().length < 6) {
-            Alert.alert(
+            CustomAlert.alert(
                 'Contraseña débil',
                 'La contraseña debe tener al menos 6 caracteres'
             );
@@ -157,18 +158,18 @@ export function useLogin() {
             );
 
             if (error) {
-                Alert.alert('Error al registrarse', error.message);
+                CustomAlert.alert('Error al registrarse', error.message);
                 return;
             }
 
             if (!data.user) {
-                Alert.alert('Error', 'No se pudo crear el usuario');
+                CustomAlert.alert('Error', 'No se pudo crear el usuario');
                 return;
             }
 
             // Si pide confirmación de correo la sesión viene vacía
             if (!data.session) {
-                Alert.alert(
+                CustomAlert.alert(
                     'Cuenta creada',
                     'Tu cuenta fue creada correctamente (revisa tu correo si Supabase solicita confirmación y luego inicia sesión)'
                 );
@@ -178,7 +179,7 @@ export function useLogin() {
                 return;
             }
 
-            Alert.alert(
+            CustomAlert.alert(
                 'Cuenta creada',
                 'Tu cuenta fue creada correctamente'
             );
@@ -186,7 +187,7 @@ export function useLogin() {
             await redirectByRole(data.user.id);
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al registrarse');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al registrarse');
         } finally {
             setLoading(false);
         }

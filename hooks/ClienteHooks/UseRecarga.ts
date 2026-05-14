@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert } from 'react-native';
+import { CustomAlert } from '../../utils/AlertManager';
+
 import { router } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { BilleteraService } from '../../services/BilleteraService';
@@ -82,7 +83,7 @@ export function useRecarga() {
 
             if (metodosError) {
                 console.log(metodosError.message);
-                Alert.alert('Error', 'No se pudieron cargar tus métodos de pago');
+                CustomAlert.alert('Error', 'No se pudieron cargar tus métodos de pago');
                 return;
             }
 
@@ -98,7 +99,7 @@ export function useRecarga() {
 
             if (cuponesError) {
                 console.log(cuponesError.message);
-                Alert.alert('Error', 'No se pudieron cargar tus cupones');
+                CustomAlert.alert('Error', 'No se pudieron cargar tus cupones');
                 return;
             }
 
@@ -111,7 +112,7 @@ export function useRecarga() {
             setCupones(cuponesDisponibles as CuponRecarga[]);
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cargar datos de recarga');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cargar datos de recarga');
         } finally {
             setLoadingData(false);
         }
@@ -126,22 +127,22 @@ export function useRecarga() {
         const montoFinal = obtenerMontoNumerico(monto);
 
         if (!usuarioId) {
-            Alert.alert('Error', 'No se pudo obtener el usuario actual');
+            CustomAlert.alert('Error', 'No se pudo obtener el usuario actual');
             return;
         }
 
         if (!monto.trim() || Number.isNaN(montoFinal) || montoFinal <= 0) {
-            Alert.alert('Monto inválido', 'Ingresa un monto válido mayor a $0.00');
+            CustomAlert.alert('Monto inválido', 'Ingresa un monto válido mayor a $0.00');
             return;
         }
 
         if (montoFinal > MONTO_MAXIMO_RECARGA) {
-            Alert.alert('Monto excedido', `El monto máximo de recarga es $${MONTO_MAXIMO_RECARGA.toFixed(2)}`);
+            CustomAlert.alert('Monto excedido', `El monto máximo de recarga es $${MONTO_MAXIMO_RECARGA.toFixed(2)}`);
             return;
         }
 
         if (!metodoPagoSeleccionado) {
-            Alert.alert('Método de pago requerido', 'Debes seleccionar una tarjeta activa para recargar');
+            CustomAlert.alert('Método de pago requerido', 'Debes seleccionar una tarjeta activa para recargar');
             return;
         }
 
@@ -152,12 +153,12 @@ export function useRecarga() {
             const { data: billetera, error: billeteraError } = await BilleteraService.obtenerBilletera(usuarioId);
 
             if (billeteraError || !billetera) {
-                Alert.alert('Billetera no encontrada', 'Tu usuario todavía no tiene una billetera Q-Ruta');
+                CustomAlert.alert('Billetera no encontrada', 'Tu usuario todavía no tiene una billetera Q-Ruta');
                 return;
             }
 
             if (billetera.estado !== 'activa') {
-                Alert.alert('Billetera inactiva', 'Tu billetera no está activa para recibir recargas');
+                CustomAlert.alert('Billetera inactiva', 'Tu billetera no está activa para recibir recargas');
                 return;
             }
 
@@ -206,11 +207,11 @@ export function useRecarga() {
             );
 
             if (result.error) {
-                Alert.alert('Error', `Ocurrió un problema en el paso: ${result.paso}`);
+                CustomAlert.alert('Error', `Ocurrió un problema en el paso: ${result.paso}`);
                 return;
             }
 
-            Alert.alert(
+            CustomAlert.alert(
                 'Recarga exitosa',
                 cuponSeleccionado
                     ? `Se recargaron $${montoFinal.toFixed(2)}. Descuento simulado aplicado: $${descuentoCupon.toFixed(2)}`
@@ -219,7 +220,7 @@ export function useRecarga() {
             );
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al recargar saldo');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al recargar saldo');
         } finally {
             setLoading(false);
         }

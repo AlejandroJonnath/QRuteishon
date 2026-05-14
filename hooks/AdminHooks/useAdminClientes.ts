@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { CustomAlert } from '../../utils/AlertManager';
+
 import { AdminService } from '../../services/AdminService';
 
 type EstadoPerfil = 'activo' | 'inactivo';
@@ -41,14 +42,14 @@ export function useAdminClientes() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudieron cargar los clientes.');
+                CustomAlert.alert('Error', 'No se pudieron cargar los clientes.');
                 return;
             }
 
             setClientes((data || []) as Cliente[]);
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cargar clientes.');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cargar clientes.');
         } finally {
             setLoadingData(false);
         }
@@ -84,7 +85,7 @@ export function useAdminClientes() {
 
     async function guardarCliente() {
         if (!usuario.trim() || !nombre.trim() || !apellido.trim() || !correo.trim()) {
-            Alert.alert('Campos incompletos', 'Completa usuario, nombre, apellido y correo.');
+            CustomAlert.alert('Campos incompletos', 'Completa usuario, nombre, apellido y correo.');
             return;
         }
 
@@ -109,15 +110,15 @@ export function useAdminClientes() {
 
                 if (error) {
                     console.log(error.message);
-                    Alert.alert('Error', 'No se pudo actualizar el cliente.');
+                    CustomAlert.alert('Error', 'No se pudo actualizar el cliente.');
                     return;
                 }
 
-                Alert.alert('Cliente actualizado', 'Los datos fueron guardados correctamente.');
+                CustomAlert.alert('Cliente actualizado', 'Los datos fueron guardados correctamente.');
             } else {
                 // Creamos uno nuevo (pedimos clave)
                 if (!password.trim() || password.length < 6) {
-                    Alert.alert('Clave inválida', 'Para crear un cliente debes asignar una contraseña de al menos 6 caracteres.');
+                    CustomAlert.alert('Clave inválida', 'Para crear un cliente debes asignar una contraseña de al menos 6 caracteres.');
                     setLoadingAction(false);
                     return;
                 }
@@ -126,18 +127,18 @@ export function useAdminClientes() {
 
                 if (error) {
                     console.log(error.message);
-                    Alert.alert('Error al crear', error.message);
+                    CustomAlert.alert('Error al crear', error.message);
                     return;
                 }
 
-                Alert.alert('Cliente creado', 'El nuevo cliente fue registrado en el sistema.');
+                CustomAlert.alert('Cliente creado', 'El nuevo cliente fue registrado en el sistema.');
             }
 
             limpiarFormulario();
             await cargarClientes();
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al guardar el cliente.');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al guardar el cliente.');
         } finally {
             setLoadingAction(false);
         }
@@ -151,14 +152,14 @@ export function useAdminClientes() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudo cambiar el estado del cliente.');
+                CustomAlert.alert('Error', 'No se pudo cambiar el estado del cliente.');
                 return;
             }
 
             await cargarClientes();
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cambiar el estado.');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cambiar el estado.');
         } finally {
             setLoadingAction(false);
         }

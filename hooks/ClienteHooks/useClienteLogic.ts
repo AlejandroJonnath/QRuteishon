@@ -1,7 +1,8 @@
 import { router, type Href } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { CustomAlert } from '../../utils/AlertManager';
+
 import { BilleteraService } from '../../services/BilleteraService';
 import { CuponesService } from '../../services/CuponesService';
 
@@ -59,7 +60,7 @@ export function useClienteLogic() {
             const { data: billeteraData, error: billeteraError } = await BilleteraService.obtenerBilletera(usuarioId);
 
             if (billeteraError) {
-                Alert.alert('Error', 'No se pudo cargar la billetera');
+                CustomAlert.alert('Error', 'No se pudo cargar la billetera');
                 console.log(billeteraError.message);
                 return;
             }
@@ -70,7 +71,7 @@ export function useClienteLogic() {
             const { data: movimientosData, error: movimientosError } = await BilleteraService.obtenerUltimosMovimientos(usuarioId, 5);
 
             if (movimientosError) {
-                Alert.alert('Error', 'No se pudieron cargar los movimientos');
+                CustomAlert.alert('Error', 'No se pudieron cargar los movimientos');
                 console.log(movimientosError.message);
                 return;
             }
@@ -81,7 +82,7 @@ export function useClienteLogic() {
             const { data: cuponesData, error: cuponesError } = await CuponesService.obtenerCuponesDisponibles(usuarioId, 'cliente');
 
             if (cuponesError) {
-                Alert.alert('Error', 'No se pudieron cargar los cupones');
+                CustomAlert.alert('Error', 'No se pudieron cargar los cupones');
                 console.log(cuponesError.message);
                 return;
             }
@@ -89,7 +90,7 @@ export function useClienteLogic() {
             setCupones((cuponesData || []) as Cupon[]);
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cargar el panel');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cargar el panel');
         } finally {
             setLoadingData(false);
         }

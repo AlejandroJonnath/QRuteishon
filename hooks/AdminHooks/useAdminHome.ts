@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { CustomAlert } from '../../utils/AlertManager';
+
 import { router } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { AdminService } from '../../services/AdminService';
@@ -25,7 +26,7 @@ export function useAdminHome() {
 
             if (data.error) {
                 console.log(data.error.message);
-                Alert.alert('Error', 'No se pudo cargar el resumen.');
+                CustomAlert.alert('Error', 'No se pudo cargar el resumen.');
                 return;
             }
 
@@ -40,7 +41,7 @@ export function useAdminHome() {
 
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cargar el panel admin.');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cargar el panel admin.');
         } finally {
             setLoadingData(false);
         }

@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
+import { CustomAlert } from '../../utils/AlertManager';
+
 import { useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import { router } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { PagosService } from '../../services/PagosService';
 import { BilleteraService } from '../../services/BilleteraService';
 import { extraerToken } from '../../utils/formatters';
+import { generarYCompartirFacturaCliente } from '../../utils/GenerarFacturaPdf';
 
 export type PagoQr = {
     id: string;
@@ -43,7 +45,7 @@ export function usePagarQr() {
         const token = extraerToken(result.data);
 
         if (!token) {
-            Alert.alert('QR inválido', 'No se pudo leer el código QR', [
+            CustomAlert.alert('QR inválido', 'No se pudo leer el código QR', [
                 {
                     text: 'Intentar otra vez',
                     onPress: () => setScanned(false),
@@ -64,7 +66,7 @@ export function usePagarQr() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudo consultar el pago QR', [
+                CustomAlert.alert('Error', 'No se pudo consultar el pago QR', [
                     {
                         text: 'Intentar otra vez',
                         onPress: () => setScanned(false),
@@ -74,7 +76,7 @@ export function usePagarQr() {
             }
 
             if (!pago) {
-                Alert.alert('QR no encontrado', 'No existe un pago asociado a este QR', [
+                CustomAlert.alert('QR no encontrado', 'No existe un pago asociado a este QR', [
                     {
                         text: 'Escanear otro',
                         onPress: () => setScanned(false),
@@ -84,7 +86,7 @@ export function usePagarQr() {
             }
 
             if (pago.estado !== 'pendiente') {
-                Alert.alert(
+                CustomAlert.alert(
                     'QR no disponible',
                     `Este QR ya tiene estado: ${pago.estado}`,
                     [
@@ -101,7 +103,7 @@ export function usePagarQr() {
             if (pago.expira_en && new Date(pago.expira_en) < new Date()) {
                 await PagosService.marcarVencido(pago.id);
 
-                Alert.alert('QR vencido', 'Este código QR ya expiró', [
+                CustomAlert.alert('QR vencido', 'Este código QR ya expiró', [
                     {
                         text: 'Escanear otro',
                         onPress: () => setScanned(false),
@@ -113,7 +115,7 @@ export function usePagarQr() {
             const total = Number(pago.total || 0).toFixed(2);
 
             // Le pedimos que nos jure que quiere pagarlo
-            Alert.alert(
+            CustomAlert.alert(
                 'Confirmar pago',
                 `¿Estás seguro de pagar $${total} por gasolina ${pago.tipo_gasolina}?`,
                 [
@@ -130,7 +132,7 @@ export function usePagarQr() {
             );
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al leer el QR', [
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al leer el QR', [
                 {
                     text: 'Intentar otra vez',
                     onPress: () => setScanned(false),
@@ -145,7 +147,7 @@ export function usePagarQr() {
         const usuarioId = session?.user?.id;
 
         if (!usuarioId) {
-            Alert.alert('Error', 'No se pudo obtener el usuario actual');
+            CustomAlert.alert('Error', 'No se pudo obtener el usuario actual');
             setScanned(false);
             return;
         }
@@ -156,7 +158,7 @@ export function usePagarQr() {
             const total = Number(pago.total || 0);
 
             if (total <= 0) {
-                Alert.alert('Pago inválido', 'El total del pago no es válido');
+                CustomAlert.alert('Pago inválido', 'El total del pago no es válido');
                 setScanned(false);
                 return;
             }
@@ -167,13 +169,13 @@ export function usePagarQr() {
 
                 if (billeteraError) {
                     console.log(billeteraError.message);
-                    Alert.alert('Error', 'No se pudo consultar tu billetera');
+                    CustomAlert.alert('Error', 'No se pudo consultar tu billetera');
                     setScanned(false);
                     return;
                 }
 
                 if (!billetera || billetera.estado !== 'activa') {
-                    Alert.alert('Billetera inactiva o no encontrada', 'Tu billetera no está lista');
+                    CustomAlert.alert('Billetera inactiva o no encontrada', 'Tu billetera no está lista');
                     setScanned(false);
                     return;
                 }
@@ -181,7 +183,7 @@ export function usePagarQr() {
                 const saldoActual = Number(billetera.saldo || 0);
 
                 if (saldoActual < total) {
-                    Alert.alert(
+                    CustomAlert.alert(
                         'Saldo insuficiente',
                         `Tu saldo actual es $${saldoActual.toFixed(2)} y el pago es de $${total.toFixed(2)}`
                     );
@@ -201,7 +203,7 @@ export function usePagarQr() {
 
                 if (result.error && result.paso !== 'movimiento') {
                     console.log(result.error.message);
-                    Alert.alert('Error', `Ocurrió un problema en el paso: ${result.paso}`);
+                    CustomAlert.alert('Error', `Ocurrió un problema en el paso: ${result.paso}`);
                     setScanned(false);
                     return;
                 }
@@ -210,7 +212,7 @@ export function usePagarQr() {
                 // TODO: Habría que hacer otra función en el servicio si no afecta billetera
             }
 
-            Alert.alert(
+            CustomAlert.alert(
                 'Pago aprobado',
                 `Se realizó el pago de $${total.toFixed(2)} correctamente`,
                 [
@@ -218,11 +220,18 @@ export function usePagarQr() {
                         text: 'Aceptar',
                         onPress: () => router.replace('/cliente'),
                     },
+                    {
+                        text: 'Descargar Factura',
+                        onPress: async () => {
+                            await generarYCompartirFacturaCliente(pago);
+                            router.replace('/cliente');
+                        },
+                    },
                 ]
             );
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al procesar el pago');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al procesar el pago');
             setScanned(false);
         } finally {
             setLoadingPago(false);

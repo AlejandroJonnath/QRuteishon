@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Alert } from 'react-native';
+import { CustomAlert } from '../../utils/AlertManager';
+
 import { useAuth } from '../../context/AuthContext';
 import { BilleteraService } from '../../services/BilleteraService';
 
@@ -44,14 +45,14 @@ export function useMetodosPagos() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudieron cargar los métodos de pago');
+                CustomAlert.alert('Error', 'No se pudieron cargar los métodos de pago');
                 return;
             }
 
             setMetodos(data || []);
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cargar las tarjetas');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cargar las tarjetas');
         } finally {
             setLoadingData(false);
         }
@@ -59,18 +60,18 @@ export function useMetodosPagos() {
 
     async function agregarMetodoPago() {
         if (!usuarioId) {
-            Alert.alert('Error', 'No se pudo obtener el usuario actual');
+            CustomAlert.alert('Error', 'No se pudo obtener el usuario actual');
             return;
         }
 
         if (!marca.trim() || !ultimos4.trim() || !titular.trim()) {
-            Alert.alert('Campos incompletos', 'Completa la marca, últimos 4 dígitos y titular');
+            CustomAlert.alert('Campos incompletos', 'Completa la marca, últimos 4 dígitos y titular');
             return;
         }
 
         // (Expresión regular para asegurarnos de que sí o sí sean 4 numeritos)
         if (!/^\d{4}$/.test(ultimos4.trim())) {
-            Alert.alert('Dato inválido', 'Los últimos 4 dígitos deben ser exactamente 4 números');
+            CustomAlert.alert('Dato inválido', 'Los últimos 4 dígitos deben ser exactamente 4 números');
             return;
         }
 
@@ -91,11 +92,11 @@ export function useMetodosPagos() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudo agregar la tarjeta');
+                CustomAlert.alert('Error', 'No se pudo agregar la tarjeta');
                 return;
             }
 
-            Alert.alert('Tarjeta agregada', 'El método de pago fue registrado correctamente');
+            CustomAlert.alert('Tarjeta agregada', 'El método de pago fue registrado correctamente');
 
             setMarca('');
             setUltimos4('');
@@ -106,7 +107,7 @@ export function useMetodosPagos() {
             await cargarMetodos();
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al agregar la tarjeta');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al agregar la tarjeta');
         } finally {
             setLoading(false);
         }
@@ -121,14 +122,14 @@ export function useMetodosPagos() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudo desactivar la tarjeta');
+                CustomAlert.alert('Error', 'No se pudo desactivar la tarjeta');
                 return;
             }
 
             await cargarMetodos();
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al desactivar la tarjeta');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al desactivar la tarjeta');
         } finally {
             setLoading(false);
         }

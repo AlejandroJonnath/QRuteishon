@@ -12,8 +12,8 @@ import { Stack } from 'expo-router';
 
 // Importamos AuthProvider desde el contexto de autenticación
 // AuthProvider sirve para envolver la aplicación y compartir datos de autenticación
-// Gracias a esto, las pantallas internas pueden saber si hay usuario logueado, qué rol tiene, si está cargando la sesión, etc
 import { AuthProvider } from '../context/AuthContext';
+import { GlobalAlert } from '../components/GlobalAlert';
 
 // Exportamos el componente RootLayout
 // Este componente es el layout raíz de la aplicación
@@ -29,6 +29,7 @@ export default function RootLayout() {
       {/* headerShown: false oculta el encabezado automático que Expo Router muestra por defecto */}
       {/* Esto es útil cuando queremos diseñar nuestros propios headers o pantallas completas */}
       <Stack screenOptions={{ headerShown: false }} />
+      <GlobalAlert />
     </AuthProvider>
   );
 }

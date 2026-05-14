@@ -350,4 +350,51 @@ export const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '600',
     },
+
+    // (Modal Custom Selector)
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(5, 11, 20, 0.85)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24,
+    },
+    modalContent: {
+        backgroundColor: '#0B132B',
+        borderRadius: 20,
+        padding: 20,
+        width: '100%',
+        maxWidth: 400,
+        borderWidth: 1,
+        borderColor: '#1E293B',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    modalItem: {
+        paddingVertical: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: '#1E293B',
+    },
+    modalItemText: {
+        fontSize: 16,
+        color: '#D1D5DB',
+        textAlign: 'center',
+    },
+    modalCloseButton: {
+        marginTop: 16,
+        paddingVertical: 14,
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    modalCloseText: {
+        color: '#EF4444',
+        fontSize: 15,
+        fontWeight: 'bold',
+    },
 });

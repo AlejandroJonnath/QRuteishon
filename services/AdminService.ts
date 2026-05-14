@@ -61,6 +61,19 @@ export const AdminService = {
     },
 
     // -----------------------------------------------------
+    // GASOLINERAS
+    // -----------------------------------------------------
+    obtenerGasolineras: async () => {
+        const { data, error } = await supabase
+            .from('gasolineras')
+            .select('*')
+            .eq('estado', 'activa')
+            .order('nombre', { ascending: true });
+
+        return { data, error };
+    },
+
+    // -----------------------------------------------------
     // CUPONES
     // -----------------------------------------------------
     obtenerTodosLosCupones: async () => {

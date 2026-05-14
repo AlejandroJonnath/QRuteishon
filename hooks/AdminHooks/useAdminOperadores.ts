@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { CustomAlert } from '../../utils/AlertManager';
+
 import { AdminService } from '../../services/AdminService';
 
 type EstadoPerfil = 'activo' | 'inactivo';
@@ -17,9 +18,15 @@ export type Operador = {
     gasolinera_id: string | null;
 };
 
+export type GasolineraResumen = {
+    id: string;
+    nombre: string;
+};
+
 export function useAdminOperadores() {
     const [operadores, setOperadores] = useState<Operador[]>([]);
     const [operadorSeleccionado, setOperadorSeleccionado] = useState<Operador | null>(null);
+    const [gasolineras, setGasolineras] = useState<GasolineraResumen[]>([]);
 
     const [usuario, setUsuario] = useState('');
     const [cedula, setCedula] = useState('');
@@ -38,18 +45,22 @@ export function useAdminOperadores() {
         try {
             setLoadingData(true);
 
-            const { data, error } = await AdminService.obtenerUsuariosPorRol('operador');
+            const [resOperadores, resGasolineras] = await Promise.all([
+                AdminService.obtenerUsuariosPorRol('operador'),
+                AdminService.obtenerGasolineras()
+            ]);
 
-            if (error) {
-                console.log(error.message);
-                Alert.alert('Error', 'No se pudieron cargar los operadores.');
+            if (resOperadores.error) {
+                console.log(resOperadores.error.message);
+                CustomAlert.alert('Error', 'No se pudieron cargar los operadores.');
                 return;
             }
 
-            setOperadores((data || []) as Operador[]);
+            setOperadores((resOperadores.data || []) as Operador[]);
+            setGasolineras((resGasolineras.data || []) as GasolineraResumen[]);
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cargar operadores.');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cargar operadores.');
         } finally {
             setLoadingData(false);
         }
@@ -87,7 +98,7 @@ export function useAdminOperadores() {
 
     async function guardarOperador() {
         if (!usuario.trim() || !nombre.trim() || !apellido.trim() || !correo.trim() || !gasolineraId.trim()) {
-            Alert.alert('Campos incompletos', 'Completa usuario, nombre, apellido, correo y la ID de la gasolinera.');
+            CustomAlert.alert('Campos incompletos', 'Completa usuario, nombre, apellido, correo y la ID de la gasolinera.');
             return;
         }
 
@@ -111,14 +122,14 @@ export function useAdminOperadores() {
 
                 if (error) {
                     console.log(error.message);
-                    Alert.alert('Error', 'No se pudo actualizar el operador.');
+                    CustomAlert.alert('Error', 'No se pudo actualizar el operador.');
                     return;
                 }
 
-                Alert.alert('Operador actualizado', 'Los datos fueron guardados correctamente.');
+                CustomAlert.alert('Operador actualizado', 'Los datos fueron guardados correctamente.');
             } else {
                 if (!password.trim() || password.length < 6) {
-                    Alert.alert('Clave inválida', 'Asigna una contraseña de al menos 6 caracteres.');
+                    CustomAlert.alert('Clave inválida', 'Asigna una contraseña de al menos 6 caracteres.');
                     setLoadingAction(false);
                     return;
                 }
@@ -127,18 +138,18 @@ export function useAdminOperadores() {
 
                 if (error) {
                     console.log(error.message);
-                    Alert.alert('Error al crear', error.message);
+                    CustomAlert.alert('Error al crear', error.message);
                     return;
                 }
 
-                Alert.alert('Operador creado', 'El nuevo operador fue registrado en el sistema.');
+                CustomAlert.alert('Operador creado', 'El nuevo operador fue registrado en el sistema.');
             }
 
             limpiarFormulario();
             await cargarOperadores();
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al guardar el operador.');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al guardar el operador.');
         } finally {
             setLoadingAction(false);
         }
@@ -152,14 +163,14 @@ export function useAdminOperadores() {
 
             if (error) {
                 console.log(error.message);
-                Alert.alert('Error', 'No se pudo cambiar el estado del operador.');
+                CustomAlert.alert('Error', 'No se pudo cambiar el estado del operador.');
                 return;
             }
 
             await cargarOperadores();
         } catch (error) {
             console.log(error);
-            Alert.alert('Error inesperado', 'Ocurrió un problema al cambiar el estado.');
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cambiar el estado.');
         } finally {
             setLoadingAction(false);
         }
@@ -167,6 +178,7 @@ export function useAdminOperadores() {
 
     return {
         operadores,
+        gasolineras,
         operadorSeleccionado,
         usuario,
         setUsuario,
