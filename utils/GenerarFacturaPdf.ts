@@ -101,7 +101,7 @@ export async function generarYCompartirFacturaCliente(pago: any) {
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>QRuteishon</h1>
+                    <h1>Q-Ruta</h1>
                     <p>Recibo de Pago Electrónico</p>
                 </div>
                 <div class="content">
@@ -142,7 +142,7 @@ export async function generarYCompartirFacturaCliente(pago: any) {
                     </div>
                 </div>
                 <div class="footer">
-                    <p>Gracias por preferir QRuteishon</p>
+                    <p>Gracias por preferir Q-Ruta</p>
                     <p>Este documento es un comprobante de pago generado electrónicamente</p>
                 </div>
             </div>
