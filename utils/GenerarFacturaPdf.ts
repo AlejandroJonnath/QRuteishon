@@ -1,22 +1,28 @@
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
-import { Platform } from 'react-native';
-import { CustomAlert } from '../utils/AlertManager';
+import * as Print from 'expo-print'
+import * as Sharing from 'expo-sharing'
+import { Platform } from 'react-native'
+import { CustomAlert } from '../utils/AlertManager'
 
+// (ESTE ARCHIVO GENERA UN DOCUMENTO PDF CON EL COMPROBANTE DE PAGO DEL CLIENTE Y LO COMPARTE POR WHATSAPP EMAIL O LO QUE EL USUARIO ELIJA DESDE SU CELULAR)
 
+// (La función principal que construye el HTML del comprobante y lo convierte a PDF)
 export async function generarYCompartirFacturaCliente(pago: any) {
     try {
-        const total = Number(pago.total || 0).toFixed(2);
-        const subtotal = Number(pago.valor || 0).toFixed(2);
-        const descuento = Number(pago.descuento || 0).toFixed(2);
+        // (Formateamos los números a dos decimales para que se vean bien en el documento)
+        const total = Number(pago.total || 0).toFixed(2)
+        const subtotal = Number(pago.valor || 0).toFixed(2)
+        const descuento = Number(pago.descuento || 0).toFixed(2)
+
+        // (Construimos la fecha legible en español con hora incluida para el comprobante)
         const fecha = new Date().toLocaleDateString('es-ES', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
-        });
+        })
 
+        // (Construimos el HTML completo del comprobante usando plantilla de texto multilinea)
         const html = `
         <!DOCTYPE html>
         <html lang="es">
@@ -81,7 +87,7 @@ export async function generarYCompartirFacturaCliente(pago: any) {
                     padding-top: 15px;
                 }
                 .text-green {
-                    color: #0B132B; /* Dark color for text contrast */
+                    color: #0B132B;
                 }
                 .footer {
                     background-color: #F3F4F6;
@@ -136,40 +142,53 @@ export async function generarYCompartirFacturaCliente(pago: any) {
                     </div>
                 </div>
                 <div class="footer">
-                    <p>Gracias por preferir QRuteishon.</p>
-                    <p>Este documento es un comprobante de pago generado electrónicamente.</p>
+                    <p>Gracias por preferir QRuteishon</p>
+                    <p>Este documento es un comprobante de pago generado electrónicamente</p>
                 </div>
             </div>
         </body>
         </html>
-        `;
+        `
 
+        // (En la web no podemos guardar archivos nativamente ni usar Share así que usamos el diálogo de impresión del navegador)
         if (Platform.OS === 'web') {
-            // En la web no podemos guardar archivos directos nativamente ni usar Share, 
-            // así que abrimos el diálogo de impresión del navegador (que permite Guardar como PDF)
-            await Print.printAsync({ html });
-            return;
+            // (El diálogo de impresión del navegador tiene la opción de Guardar como PDF de manera nativa)
+            await Print.printAsync({ html })
+            return
         }
 
+        // (En iOS y Android convertimos el HTML a un archivo PDF real usando expo-print)
         const { uri } = await Print.printToFileAsync({
             html,
+            // (base64 en false para obtener una URI de archivo real que se pueda compartir)
             base64: false
-        });
+        })
 
-        const canShare = await Sharing.isAvailableAsync();
+        // (Verificamos si el dispositivo puede compartir archivos antes de intentarlo)
+        const canShare = await Sharing.isAvailableAsync()
 
+        // (Si puede compartir abrimos el selector de apps como WhatsApp Gmail etc)
         if (canShare) {
             await Sharing.shareAsync(uri, {
                 mimeType: 'application/pdf',
                 dialogTitle: 'Descargar o compartir comprobante',
-                UTI: 'com.adobe.pdf' // iOS identifier
-            });
+                // (UTI es el identificador que usa iOS para reconocer que es un PDF)
+                UTI: 'com.adobe.pdf'
+            })
         } else {
-            CustomAlert.alert('Error', 'No es posible compartir o guardar archivos en este dispositivo.');
+            // (Si el dispositivo no puede compartir archivos avisamos)
+            CustomAlert.alert('Error', 'No es posible compartir o guardar archivos en este dispositivo')
         }
 
     } catch (error) {
-        console.log('Error generando PDF:', error);
-        CustomAlert.alert('Error', 'No se pudo generar el documento PDF.');
+        // (Si algo falla durante la generación del PDF atrapamos el error)
+        console.log('Error generando PDF:', error)
+        CustomAlert.alert('Error', 'No se pudo generar el documento PDF')
     }
 }
+
+/*
+Problemas que se pueden generar si quitan funciones:
+(si quitas generarYCompartirFacturaCliente el botón de Descargar Factura que aparece después de pagar no hará absolutamente nada)
+(si quitas la lógica de Platform.OS el código intentará usar Share en la web y dará error porque el navegador no soporta esa API nativa)
+*/

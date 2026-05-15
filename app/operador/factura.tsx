@@ -1,4 +1,4 @@
-//Imports de componentes
+// Importamos los componentes visuales básicos de React Native como botones, textos y listas desplazables
 import {
     View,
     Text,
@@ -8,145 +8,117 @@ import {
     RefreshControl,
     TextInput,
 } from 'react-native';
-//Importamos para poder navegar entre pantallas o volver a la anterior
+// Importamos router para poder ir a otras pantallas o volver a la anterior
 import { router } from 'expo-router';
-//Hook para auth
+// Importamos el guardia que verifica que quien intente entrar sea sí o sí un operador
 import { useRequireRole } from '../../hooks/useRequireRole';
-//Hook para facturacion
+// Importamos toda la lógica y variables relacionadas con las facturas
 import { useFacturaOperador } from '../../hooks/OperadorHooks/UseFacturaOperador';
-// Estilos 
+// Importamos los estilos para que la pantalla no se vea como bloc de notas
 import { styles } from '../_styles/OperadorStyles/FacturaOperadorStyles';
 
+// Sección
+// Este archivo es la pantalla donde el operador puede elegir un pago que ya le hicieron y generarle una factura a nombre de un cliente
+// Es útil si el cliente necesita el documento para sus gastos y no quiso registrarse en la app
+
+// Funciones
+// GenerarFactura: Dibuja toda la pantalla, la lista de pagos disponibles, los campos para llenar los datos del cliente y el botón para imprimir la factura
+
 export default function GenerarFactura() {
+    // (Llamamos al guardia para que nos asegure que no estamos hackeando)
     useRequireRole('operador');
 
+    // (Le pedimos prestado al cerebro de las facturas todas sus variables y funciones)
     const {
-
-        pagos,// pagos contiene la lista de pagos aprobados disponibles para facturar
-        pagoSeleccionado,// pagoSeleccionado guarda el pago que el operador eligió para generar la factura
-
-        cedula, // cedula guarda el valor escrito en el campo de cédula
-        setCedula,  // setCedula actualiza el valor de cedula cuando el usuario escribe
-
-        nombre, // nombre guarda el valor escrito en el campo de nombre
-        setNombre, // setNombre actualiza el valor de nombre cuando el usuario escribe
-
-        apellido, // apellido guarda el valor escrito en el campo de apellido
-        setApellido, // setApellido actualiza el valor de apellido cuando el usuario escribe
-
-        telefono, // telefono guarda el valor escrito en el campo de teléfono
-        setTelefono, // setTelefono actualiza el valor de telefono cuando el usuario escribe
-
-        correo, // correo guarda el valor escrito en el campo de correo electrónico
-        setCorreo, // setCorreo actualiza el valor de correo cuando el usuario escribe
-
-        loadingData, // loadingData indica si todavía se están cargando los pagos aprobados
-        loadingFactura, // loadingFactura indica si la factura se está generando en ese momento
-
-        cargarPagosAprobados, // cargarPagosAprobados vuelve a cargar la lista de pagos aprobados
-
-        seleccionarPago, // seleccionarPago guarda como seleccionado el pago que el operador toca
-
-        generarFactura,// generarFactura ejecuta el proceso de generación de factura
-
+        pagos,
+        pagoSeleccionado,
+        cedula,
+        setCedula,
+        nombre,
+        setNombre,
+        apellido,
+        setApellido,
+        telefono,
+        setTelefono,
+        correo,
+        setCorreo,
+        loadingData,
+        loadingFactura,
+        cargarPagosAprobados,
+        seleccionarPago,
+        generarFactura,
     } = useFacturaOperador();
 
-    // Vamos a controlar la pantalla inicial, si loadingData es verdadero, significa que todavía se están obteniendo los pagos aprobados
+    // (Revisamos si el celular todavía está descargando los pagos viejos desde Supabase)
     if (loadingData) {
         return (
-            // View funciona como contenedor principal de la pantalla de carga
-            // styles.container aplica el fondo y estructura general
-            // styles.center centra el contenido dentro de la pantalla
+            // (Mostramos la ruedita verde dando vueltas para que el operador no crea que se trabó)
             <View style={[styles.container, styles.center]}>
-                {/* ActivityIndicator muestra el spinner de carga */}
-                {/* color define el color verde del indicador */}
-                {/* size="large" muestra el indicador en tamaño grande */}
                 <ActivityIndicator color="#00E676" size="large" />
-                {/* Text muestra un mensaje para informar al usuario qué se está cargando */}
-                {/* styles.loadingText aplica el estilo del texto de carga */}
                 <Text style={styles.loadingText}>Cargando pagos aprobados...</Text>
             </View>
         );
     }
 
-    // Si loadingData es falso, significa que ya se pueden mostrar los pagos y el formulario
+    // (Si ya bajó los datos, empezamos a pintar la interfaz)
     return (
-        // ScrollView permite que toda la pantalla tenga desplazamiento vertical
-        // Esto es útil porque la pantalla contiene lista de pagos, formulario, resumen y botón de volver
+        // (Envolvemos todo en un ScrollView para que si el formulario es largo, puedan bajar con el dedo)
         <ScrollView
-            // Aplicamos el estilo al principal contenedor
             style={styles.container}
-            //Aplicamos estilos al contenido que está dentro del contenedor principal
             contentContainerStyle={styles.content}
-            // refreshControl agrega la funcionalidad de actualizar al deslizar hacia abajo
+            // (Este pedacito sirve para que si jalan la pantalla para abajo, se actualice la lista de pagos)
             refreshControl={
                 <RefreshControl
-                    // refreshing indica si actualmente se está ejecutando una recarga de datos
                     refreshing={loadingData}
-                    // onRefresh indica qué función se ejecuta cuando el usuario desliza hacia abajo
                     onRefresh={cargarPagosAprobados}
-                    // tintColor define el color del indicador de act en iOS
                     tintColor="#00E676"
-                    // colors define el color del indicador de act en Android
                     colors={['#00E676']}
                 />
             }
         >
 
-            {/*Empezaremos ya con el encabezado */}
+            {/* El encabezado con el título y la explicación de la pantalla */}
             <View style={styles.header}>
-                {/*Título */}
                 <Text style={styles.title}>Generar factura</Text>
-                {/*Subtítulo */}
                 <Text style={styles.subtitle}>
                     Selecciona un pago aprobado y completa los datos del cliente.
                 </Text>
             </View>
 
-            {/* Tarjeta donde se muestran los pagos aprobados disponibles */}
+            {/* La cajita donde van a aparecer todas las ventas que se han hecho */}
             <View style={styles.card}>
-                {/*Encabezado */}
                 <View style={styles.cardHeader}>
-                    {/*Título */}
                     <Text style={styles.cardTitle}>Pagos aprobados</Text>
-                    {/*Muestra la cantidad de pagos aprobados que están disponibles */}
+                    {/* (Contamos cuántas ventas hay listas para facturar) */}
                     <Text style={styles.cardMuted}>{pagos.length}</Text>
                 </View>
 
-                {/* Validamos si no existen pagos aprobados */}
+                {/* (Verificamos si no ha vendido nada todavía) */}
                 {pagos.length === 0 ? (
-                    // Si no hay pagos, se muestra un mensaje diciendo algo sobre que no existen pagos para facturar xd
                     <Text style={styles.emptyText}>
                         Aún no tienes pagos aprobados para facturar.
                     </Text>
                 ) : (
-                    // En caso que sí existan pagos, recorremos el array "pagos" para mostrar cada pago como una opción seleccionable
+                    // (Si hay ventas, vamos creando un cuadrito o tarjeta por cada venta usando .map)
                     pagos.map((pago) => {
-                        // activo indica si el pago actual de la lista es el mismo que está seleccionado
-                        // Se compara el id del pago seleccionado con el id del pago que se está renderizando
+                        // (Revisamos si el operador ya le picó a este pago o no)
                         const activo = pagoSeleccionado?.id === pago.id;
 
-                        // Retornamos una tarjeta presionable por cada pago aprobado
                         return (
-                            // TouchableOpacity permite que cada pago pueda tocarse para seleccionarlo
+                            // (Botón para seleccionar un pago específico)
                             <TouchableOpacity
-                                // key ayuda a React a identificar cada elemento único dentro de una lista
                                 key={pago.id}
-                                // style aplica varios estilos a la tarjeta del pago
-                                // styles.paymentItem es el estilo base
-                                // activo && styles.paymentItemActive agrega estilo activo solo si el pago está seleccionado
+                                // (Si le pica, le cambia el color a verde para que sepa que está seleccionado)
                                 style={[
                                     styles.paymentItem,
                                     activo && styles.paymentItemActive,
                                 ]}
-                                // onPress ejecuta seleccionarPago enviando el pago actual como argumento
+                                // (Avisa al cerebro cuál es el pago elegido)
                                 onPress={() => seleccionarPago(pago)}
-                                // activeOpacity controla la opacidad visual cuando el usuario presiona el pago
                                 activeOpacity={0.85}
                             >
-                                {/* Contenedor que mostrará la agrupación del pago*/}
                                 <View>
-                                    {/* Muestra el total y el tipo de gasolina */}
+                                    {/* (Mostramos cuánta plata fue y qué gasolina le pusieron) */}
                                     <Text
                                         style={[
                                             styles.paymentTitle,
@@ -156,7 +128,7 @@ export default function GenerarFactura() {
                                         ${Number(pago.total).toFixed(2)} · {pago.tipo_gasolina}
                                     </Text>
 
-                                    {/* Muestra el método de pago usado */}
+                                    {/* (Mostramos cómo pagó, por ejemplo "Efectivo" o "Tarjeta") */}
                                     <Text
                                         style={[
                                             styles.paymentText,
@@ -166,7 +138,7 @@ export default function GenerarFactura() {
                                         Método: {pago.metodo_pago}
                                     </Text>
 
-                                    {/* Muestra la fecha en la que el pago fue aprobado o pagado */}
+                                    {/* (Mostramos a qué hora y fecha exacta fue la venta) */}
                                     <Text
                                         style={[
                                             styles.paymentText,
@@ -177,7 +149,7 @@ export default function GenerarFactura() {
                                     </Text>
                                 </View>
 
-                                {/* Indica si el pago ya fue seleccionado o si todavía se puede elegir */}
+                                {/* (Mostramos una etiquetita a la derecha que dice si está Elegido o no) */}
                                 <Text
                                     style={[
                                         styles.paymentBadge,
@@ -192,113 +164,122 @@ export default function GenerarFactura() {
                 )}
             </View>
 
-            {/* OJO: Solo mostrará cuando existe un pago seleccionado*/}
-            {/* Si pagoSeleccionado es verdadero, se renderiza el formulario de facturación */}
+            {/* (Esta parte está oculta y SÓLO aparece cuando el operador elige un pago) */}
             {pagoSeleccionado && (
-                // Tarjeta que contiene los campos de datos del cliente y el resumen del pago
                 <View style={styles.card}>
-                    {/* Título*/}
                     <Text style={styles.cardTitle}>Datos de facturación</Text>
-                    {/* Cédula*/}
+
+                    {/* Caja para poner la cédula o RUC */}
                     <Text style={styles.label}>Cédula</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Ejemplo: 1312345678"
                         placeholderTextColor="#6B7280"
-                        value={cedula} // value conecta el input con el estado cedula
-                        onChangeText={setCedula} // onChangeText actualiza cedula cada vez que el usuario escribe
-                        keyboardType="number-pad" // keyboardType define que se muestre un teclado numérico
+                        value={cedula}
+                        onChangeText={setCedula}
+                        // (Teclado especial con puros números)
+                        keyboardType="number-pad"
                     />
 
-                    {/* Nombre*/}
+                    {/* Caja para el nombre del cliente */}
                     <Text style={styles.label}>Nombre</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Ejemplo: Jonnath"
                         placeholderTextColor="#6B7280"
-                        value={nombre} // value conecta el input con el estado nombre
-                        onChangeText={setNombre} // onChangeText actualiza nombre cada vez que el usuario escribe
+                        value={nombre}
+                        onChangeText={setNombre}
                     />
 
-                    {/* Apellido*/}
+                    {/* Caja para el apellido del cliente */}
                     <Text style={styles.label}>Apellido</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Ejemplo: Cedeño"
                         placeholderTextColor="#6B7280"
-                        value={apellido} // value conecta el input con el estado apellido
-                        onChangeText={setApellido} // onChangeText actualiza apellido cada vez que el usuario escribe
+                        value={apellido}
+                        onChangeText={setApellido}
                     />
-                    {/* Teléfono*/}
+
+                    {/* Caja para el número de teléfono por si le escribimos por WhatsApp */}
                     <Text style={styles.label}>Teléfono</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="Ejemplo: +593 0999999999"
                         placeholderTextColor="#6B7280"
-                        value={telefono} // value conecta el input con el estado telefono
-                        onChangeText={setTelefono} // onChangeText actualiza telefono cada vez que el usuario escribe
-                        keyboardType="phone-pad" //Tipo de teclado para números de teléfono
+                        value={telefono}
+                        onChangeText={setTelefono}
+                        // (Teclado especial que tiene el + y números)
+                        keyboardType="phone-pad"
                     />
-                    {/* Correo*/}
+
+                    {/* Caja para el correo a donde le va a llegar la factura */}
                     <Text style={styles.label}>Correo</Text>
                     <TextInput
                         style={styles.input}
                         placeholder="cliente@correo.com"
                         placeholderTextColor="#6B7280"
-                        value={correo}  // value conecta el input con el estado correo
-                        onChangeText={setCorreo} // onChangeText actualiza correo cada vez que el usuario escribe
+                        value={correo}
+                        onChangeText={setCorreo}
                         keyboardType="email-address"
-                        autoCapitalize="none" // autoCapitalize="none" evita que el teclado ponga mayúsculas automáticamente
+                        autoCapitalize="none"
                     />
 
-                    {/* Mostraremos el resumen del pago: subtotal, descuento y total antes de generar la factura */}
+                    {/* Un cuadrito resumen que desglose el precio por si usaron un cupón de descuento */}
                     <View style={styles.summaryBox}>
                         <View style={styles.summaryRow}>
-                            {/* Fila del subtotal */}
                             <Text style={styles.summaryLabel}>Subtotal</Text>
                             <Text style={styles.summaryValue}>
-                                ${Number(pagoSeleccionado.valor).toFixed(2)} {/* Se convierte a número y se muestra con dos decimales */}
+                                {/* (Calculamos el precio normal sin descuentos y le ponemos 2 decimales para que se vea como plata de verdad) */}
+                                ${Number(pagoSeleccionado.valor).toFixed(2)}
                             </Text>
                         </View>
 
                         <View style={styles.summaryRow}>
                             <Text style={styles.summaryLabel}>Descuento</Text>
                             <Text style={styles.summaryDiscount}>
-                                -${Number(pagoSeleccionado.descuento).toFixed(2)} {/* Se muestra con signo negativo para indicar que resta al subtotal */}
+                                {/* (Mostramos en rojo cuánto le rebajamos) */}
+                                -${Number(pagoSeleccionado.descuento).toFixed(2)}
                             </Text>
                         </View>
 
                         <View style={styles.summaryRow}>
                             <Text style={styles.summaryLabel}>Total</Text>
                             <Text style={styles.summaryTotal}>
+                                {/* (Lo que de verdad terminó pagando el cliente) */}
                                 ${Number(pagoSeleccionado.total).toFixed(2)}
                             </Text>
                         </View>
                     </View>
 
+                    {/* Botón azul gigante para mandar la orden de imprimir/guardar la factura */}
                     <TouchableOpacity
-                        // Si loadingFactura es verdadero, también aplica el estilo de botón deshabilitado
+                        // (Lo volvemos opaco si está cargando)
                         style={[styles.button, loadingFactura && styles.buttonDisabled]}
-                        onPress={generarFactura} // onPress ejecuta la función generarFactura
-                        disabled={loadingFactura} // disabled deshabilita el botón mientras la factura se está generando
-                        activeOpacity={0.85} // activeOpacity controla la opacidad cuando el botón es presionado
+                        // (Llamamos a la función final que hace todo el papeleo)
+                        onPress={generarFactura}
+                        disabled={loadingFactura}
+                        activeOpacity={0.85}
                     >
-                        {/* Si loadingFactura es verdadero, se muestra un indicador de carga */}
                         {loadingFactura ? (
-                            // ActivityIndicator indica que el proceso de generación de factura está en curso
                             <ActivityIndicator color="#0B132B" />
                         ) : (
-                            // Si no está cargando, se muestra el texto normal del botón
                             <Text style={styles.buttonText}>Generar factura</Text>
                         )}
                     </TouchableOpacity>
                 </View>
             )}
 
-            {/* Botón para volver */}
+            {/* El clásico botón de atrás para salirse de esta pantalla si se arrepiente */}
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                 <Text style={styles.backText}>Volver</Text>
             </TouchableOpacity>
         </ScrollView>
     );
 }
+
+/*
+Problemas que se pueden generar si quitan funciones:
+(si quitas cargarPagosAprobados la pantalla jamás sabrá cuáles pagos existen y la lista siempre saldrá vacía haciendo la pantalla inútil)
+(si quitas seleccionarPago el operador tocará las tarjetas de pago pero no pasará nada y el formulario de abajo nunca aparecerá)
+*/

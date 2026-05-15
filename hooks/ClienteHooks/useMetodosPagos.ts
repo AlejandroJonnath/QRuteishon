@@ -1,140 +1,190 @@
-import { useState, useEffect } from 'react';
-import { CustomAlert } from '../../utils/AlertManager';
+import { useState, useEffect } from 'react'
+import { CustomAlert } from '../../utils/AlertManager'
 
-import { useAuth } from '../../context/AuthContext';
-import { BilleteraService } from '../../services/BilleteraService';
+import { useAuth } from '../../context/AuthContext'
+import { BilleteraService } from '../../services/BilleteraService'
 
-export type TipoTarjeta = 'credito' | 'debito';
+// (ESTE ARCHIVO MANEJA TODAS LAS TARJETAS DE CRÉDITO Y DÉBITO QUE EL CLIENTE VINCULA A SU CUENTA PERMITIÉNDOLE AGREGAR NUEVAS O DESACTIVAR LAS QUE YA NO QUIERE USAR)
 
+// (Los únicos dos tipos de tarjetas que acepta nuestra app)
+export type TipoTarjeta = 'credito' | 'debito'
+
+// (Molde que describe cómo se ve una tarjeta guardada en la base de datos)
 export type MetodoPago = {
-    id: string;
-    tipo: TipoTarjeta;
-    marca: string | null;
-    ultimos_4: string;
-    titular: string | null;
-    estado: string;
-};
+    // (Identificador único de esta tarjeta)
+    id: string
+    // (A qué cuenta pertenece esta tarjeta)
+    tipo: TipoTarjeta
+    // (La marca de la tarjeta como Visa Mastercard etc)
+    marca: string | null
+    // (Los últimos cuatro dígitos del número de la tarjeta)
+    ultimos_4: string
+    // (El nombre del titular de la tarjeta)
+    titular: string | null
+    // (Si está disponible para cobrar o si fue eliminada)
+    estado: string
+}
 
+// (El gancho que maneja toda la pantalla de mis métodos de pago)
 export function useMetodosPagos() {
-    const { session } = useAuth();
+    // (Sacamos la sesión para saber a qué usuario le pertenecen estas tarjetas)
+    const { session } = useAuth()
 
-    const [tipo, setTipo] = useState<TipoTarjeta>('credito');
-    const [marca, setMarca] = useState('');
-    const [ultimos4, setUltimos4] = useState('');
-    const [titular, setTitular] = useState('');
+    // (Los estados del formulario de agregar tarjeta nueva)
+    // (El tipo que elegirá el usuario entre crédito y débito)
+    const [tipo, setTipo] = useState<TipoTarjeta>('credito')
+    // (La marca que el usuario escribirá como Visa o Mastercard)
+    const [marca, setMarca] = useState('')
+    // (Los cuatro numeritos finales de su plástico)
+    const [ultimos4, setUltimos4] = useState('')
+    // (El nombre completo del dueño de la tarjeta)
+    const [titular, setTitular] = useState('')
 
-    const [metodos, setMetodos] = useState<MetodoPago[]>([]);
+    // (La lista de todas las tarjetas activas que tiene registradas)
+    const [metodos, setMetodos] = useState<MetodoPago[]>([])
     
-    const [loading, setLoading] = useState(false);
-    const [loadingData, setLoadingData] = useState(true);
+    // (Spinner para el botón de agregar tarjeta)
+    const [loading, setLoading] = useState(false)
+    // (Spinner para la carga inicial de la lista de tarjetas)
+    const [loadingData, setLoadingData] = useState(true)
 
-    const usuarioId = session?.user?.id;
+    // (Guardamos la ID del usuario para no ir a buscarla en la sesión cada vez)
+    const usuarioId = session?.user?.id
 
+    // (Efecto que carga las tarjetas automaticamente apenas se monta la pantalla)
     useEffect(() => {
-        cargarMetodos();
-    }, [usuarioId]);
+        cargarMetodos()
+    }, [usuarioId])
 
+    // (Función que va a Supabase a traer todas las tarjetas activas del usuario)
     async function cargarMetodos() {
-        if (!usuarioId) return;
+        // (Si no sabemos quién es no hacemos nada)
+        if (!usuarioId) return
 
+        // (Intentamos la descarga)
         try {
-            setLoadingData(true);
+            // (Prendemos el spinner de carga general)
+            setLoadingData(true)
 
-            // Delegamos la búsqueda al servicio de billetera
-            const { data, error } = await BilleteraService.obtenerMetodosPago(usuarioId);
+            // (Le pedimos al servicio los métodos de pago activos de este usuario)
+            const { data, error } = await BilleteraService.obtenerMetodosPago(usuarioId)
 
+            // (Si falla la descarga avisamos)
             if (error) {
-                console.log(error.message);
-                CustomAlert.alert('Error', 'No se pudieron cargar los métodos de pago');
-                return;
+                console.log(error.message)
+                CustomAlert.alert('Error', 'No se pudieron cargar los métodos de pago')
+                return
             }
 
-            setMetodos(data || []);
+            // (Guardamos las tarjetas en el estado asegurándonos que no sea nulo)
+            setMetodos(data || [])
         } catch (error) {
-            console.log(error);
-            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cargar las tarjetas');
+            // (Si explota algo raro lo atrapamos)
+            console.log(error)
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al cargar las tarjetas')
         } finally {
-            setLoadingData(false);
+            // (Apagamos el spinner general)
+            setLoadingData(false)
         }
     }
 
+    // (La función que se llama cuando el usuario toca el botón de guardar una tarjeta nueva)
     async function agregarMetodoPago() {
+        // (Verificamos que sepamos quién está)
         if (!usuarioId) {
-            CustomAlert.alert('Error', 'No se pudo obtener el usuario actual');
-            return;
+            CustomAlert.alert('Error', 'No se pudo obtener el usuario actual')
+            return
         }
 
+        // (Verificamos que haya llenado los tres campos mínimos)
         if (!marca.trim() || !ultimos4.trim() || !titular.trim()) {
-            CustomAlert.alert('Campos incompletos', 'Completa la marca, últimos 4 dígitos y titular');
-            return;
+            CustomAlert.alert('Campos incompletos', 'Completa la marca, últimos 4 dígitos y titular')
+            return
         }
 
-        // (Expresión regular para asegurarnos de que sí o sí sean 4 numeritos)
+        // (Expresión regular para asegurarnos de que sí o sí sean exactamente 4 numeritos y nada más)
         if (!/^\d{4}$/.test(ultimos4.trim())) {
-            CustomAlert.alert('Dato inválido', 'Los últimos 4 dígitos deben ser exactamente 4 números');
-            return;
+            CustomAlert.alert('Dato inválido', 'Los últimos 4 dígitos deben ser exactamente 4 números')
+            return
         }
 
+        // (Si pasó todas las revisiones intentamos guardarla)
         try {
-            setLoading(true);
+            // (Prendemos el spinner del botón guardar)
+            setLoading(true)
 
-            // Pasamos los datos listos al servicio
+            // (Empaquetamos los datos listos para viajar a la base de datos)
             const datosMetodo = {
                 usuario_id: usuarioId,
                 tipo,
                 marca: marca.trim(),
                 ultimos_4: ultimos4.trim(),
                 titular: titular.trim(),
+                // (La ponemos activa por defecto cuando la creamos)
                 estado: 'activa',
-            };
-
-            const { error } = await BilleteraService.agregarMetodoPago(datosMetodo);
-
-            if (error) {
-                console.log(error.message);
-                CustomAlert.alert('Error', 'No se pudo agregar la tarjeta');
-                return;
             }
 
-            CustomAlert.alert('Tarjeta agregada', 'El método de pago fue registrado correctamente');
+            // (Le pedimos al servicio que la inserte en la tabla de métodos de pago)
+            const { error } = await BilleteraService.agregarMetodoPago(datosMetodo)
 
-            setMarca('');
-            setUltimos4('');
-            setTitular('');
-            setTipo('credito');
+            // (Si falla la inserción avisamos)
+            if (error) {
+                console.log(error.message)
+                CustomAlert.alert('Error', 'No se pudo agregar la tarjeta')
+                return
+            }
 
-            // Volvemos a cargar todo para que la pantalla se actualice
-            await cargarMetodos();
+            // (Celebramos que la tarjeta fue guardada)
+            CustomAlert.alert('Tarjeta agregada', 'El método de pago fue registrado correctamente')
+
+            // (Limpiamos el formulario para que quede listo para una siguiente tarjeta)
+            setMarca('')
+            setUltimos4('')
+            setTitular('')
+            setTipo('credito')
+
+            // (Recargamos la lista para que la nueva tarjeta aparezca al instante)
+            await cargarMetodos()
         } catch (error) {
-            console.log(error);
-            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al agregar la tarjeta');
+            // (Por si algo explota de manera catastrófica)
+            console.log(error)
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al agregar la tarjeta')
         } finally {
-            setLoading(false);
+            // (Apagamos el spinner del botón guardar)
+            setLoading(false)
         }
     }
 
+    // (Esta función marca la tarjeta como inactiva cuando el usuario decide eliminarla)
     async function desactivarMetodo(id: string) {
+        // (Intentamos desactivarla)
         try {
-            setLoading(true);
+            // (Prendemos el spinner del botón)
+            setLoading(true)
 
-            // (El servicio se encarga de cambiar el estado a inactiva)
-            const { error } = await BilleteraService.desactivarMetodo(id);
+            // (Le decimos al servicio que marque esta tarjeta como inactiva en vez de borrarla)
+            const { error } = await BilleteraService.desactivarMetodo(id)
 
+            // (Si falla avisamos)
             if (error) {
-                console.log(error.message);
-                CustomAlert.alert('Error', 'No se pudo desactivar la tarjeta');
-                return;
+                console.log(error.message)
+                CustomAlert.alert('Error', 'No se pudo desactivar la tarjeta')
+                return
             }
 
-            await cargarMetodos();
+            // (Recargamos la lista para que la tarjeta desaparezca de la pantalla)
+            await cargarMetodos()
         } catch (error) {
-            console.log(error);
-            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al desactivar la tarjeta');
+            // (Atrapamos errores inesperados)
+            console.log(error)
+            CustomAlert.alert('Error inesperado', 'Ocurrió un problema al desactivar la tarjeta')
         } finally {
-            setLoading(false);
+            // (Apagamos el spinner)
+            setLoading(false)
         }
     }
 
+    // (Empaquetamos todas las variables y funciones para que la pantalla las use)
     return {
         tipo,
         setTipo,
@@ -149,5 +199,12 @@ export function useMetodosPagos() {
         loadingData,
         agregarMetodoPago,
         desactivarMetodo
-    };
+    }
 }
+
+/*
+Problemas que se pueden generar si quitan funciones:
+(si quitas cargarMetodos la pantalla de métodos de pago siempre aparecerá vacía y el usuario pensará que no tiene tarjetas)
+(si quitas agregarMetodoPago el formulario de agregar tarjeta quedará de adorno y nadie podrá guardar un nuevo plástico)
+(si quitas desactivarMetodo el botón de eliminar tarjeta no hará nada y las tarjetas robadas o vencidas nunca podrán quitarse)
+*/
