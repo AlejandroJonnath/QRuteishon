@@ -6,6 +6,7 @@ import {
     RefreshControl,
     TouchableOpacity,
 } from 'react-native';
+import React, { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useRequireRole } from '../../hooks/useRequireRole';
@@ -23,6 +24,20 @@ export default function AdminAnaliticas() {
         loadingData,
         cargarAnaliticas,
     } = useAdminAnaliticas();
+
+    const [paginaPagos, setPaginaPagos] = useState(1);
+    const [paginaRecargas, setPaginaRecargas] = useState(1);
+    const registrosPorPagina = 5;
+
+    const totalPaginasPagos = Math.ceil(pagos.length / registrosPorPagina) || 1;
+    const indiceUltimoPago = paginaPagos * registrosPorPagina;
+    const indicePrimeroPago = indiceUltimoPago - registrosPorPagina;
+    const pagosPaginados = pagos.slice(indicePrimeroPago, indiceUltimoPago);
+
+    const totalPaginasRecargas = Math.ceil(recargas.length / registrosPorPagina) || 1;
+    const indiceUltimaRecarga = paginaRecargas * registrosPorPagina;
+    const indicePrimeraRecarga = indiceUltimaRecarga - registrosPorPagina;
+    const recargasPaginadas = recargas.slice(indicePrimeraRecarga, indiceUltimaRecarga);
 
     if (loadingData) {
         return (
@@ -82,22 +97,45 @@ export default function AdminAnaliticas() {
                 {pagos.length === 0 ? (
                     <Text style={styles.emptyText}>No hay pagos registrados recientes.</Text>
                 ) : (
-                    pagos.slice(0, 10).map((pago) => (
-                        <View key={pago.id} style={styles.listItem}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.listTitle}>Gasolina {pago.tipo_gasolina.toUpperCase()}</Text>
-                                <Text style={styles.listText}>
-                                    ID: {pago.id.split('-')[0]}...
-                                </Text>
+                    <>
+                        {pagosPaginados.map((pago) => (
+                            <View key={pago.id} style={styles.listItem}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.listTitle}>Gasolina {pago.tipo_gasolina.toUpperCase()}</Text>
+                                    <Text style={styles.listText}>
+                                        ID: {pago.id.split('-')[0]}...
+                                    </Text>
+                                </View>
+                                <View style={styles.listActions}>
+                                    <Text style={styles.listTitle}>${pago.total.toFixed(2)}</Text>
+                                    <Text style={styles.listText}>
+                                        {new Date(pago.pagado_en).toLocaleDateString()}
+                                    </Text>
+                                </View>
                             </View>
-                            <View style={styles.listActions}>
-                                <Text style={styles.listTitle}>${pago.total.toFixed(2)}</Text>
-                                <Text style={styles.listText}>
-                                    {new Date(pago.pagado_en).toLocaleDateString()}
-                                </Text>
-                            </View>
+                        ))}
+                        <View style={styles.paginationContainer}>
+                            <TouchableOpacity
+                                style={[styles.paginationButton, paginaPagos === 1 && styles.paginationButtonDisabled]}
+                                onPress={() => setPaginaPagos(Math.max(1, paginaPagos - 1))}
+                                disabled={paginaPagos === 1}
+                            >
+                                <Text style={styles.paginationButtonText}>Anterior</Text>
+                            </TouchableOpacity>
+                            
+                            <Text style={styles.paginationText}>
+                                Página {paginaPagos} de {totalPaginasPagos}
+                            </Text>
+                            
+                            <TouchableOpacity
+                                style={[styles.paginationButton, paginaPagos === totalPaginasPagos && styles.paginationButtonDisabled]}
+                                onPress={() => setPaginaPagos(Math.min(totalPaginasPagos, paginaPagos + 1))}
+                                disabled={paginaPagos === totalPaginasPagos}
+                            >
+                                <Text style={styles.paginationButtonText}>Siguiente</Text>
+                            </TouchableOpacity>
                         </View>
-                    ))
+                    </>
                 )}
             </View>
 
@@ -110,24 +148,47 @@ export default function AdminAnaliticas() {
                 {recargas.length === 0 ? (
                     <Text style={styles.emptyText}>No hay recargas registradas recientes.</Text>
                 ) : (
-                    recargas.slice(0, 10).map((recarga) => (
-                        <View key={recarga.id} style={styles.listItem}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.listTitle}>Recarga por {recarga.metodo}</Text>
-                                <Text style={styles.listText}>
-                                    ID: {recarga.id.split('-')[0]}...
-                                </Text>
+                    <>
+                        {recargasPaginadas.map((recarga) => (
+                            <View key={recarga.id} style={styles.listItem}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.listTitle}>Recarga por {recarga.metodo}</Text>
+                                    <Text style={styles.listText}>
+                                        ID: {recarga.id.split('-')[0]}...
+                                    </Text>
+                                </View>
+                                <View style={styles.listActions}>
+                                    <Text style={[styles.listTitle, { color: '#00E676' }]}>
+                                        +${recarga.monto.toFixed(2)}
+                                    </Text>
+                                    <Text style={styles.listText}>
+                                        {new Date(recarga.created_at).toLocaleDateString()}
+                                    </Text>
+                                </View>
                             </View>
-                            <View style={styles.listActions}>
-                                <Text style={[styles.listTitle, { color: '#00E676' }]}>
-                                    +${recarga.monto.toFixed(2)}
-                                </Text>
-                                <Text style={styles.listText}>
-                                    {new Date(recarga.created_at).toLocaleDateString()}
-                                </Text>
-                            </View>
+                        ))}
+                        <View style={styles.paginationContainer}>
+                            <TouchableOpacity
+                                style={[styles.paginationButton, paginaRecargas === 1 && styles.paginationButtonDisabled]}
+                                onPress={() => setPaginaRecargas(Math.max(1, paginaRecargas - 1))}
+                                disabled={paginaRecargas === 1}
+                            >
+                                <Text style={styles.paginationButtonText}>Anterior</Text>
+                            </TouchableOpacity>
+                            
+                            <Text style={styles.paginationText}>
+                                Página {paginaRecargas} de {totalPaginasRecargas}
+                            </Text>
+                            
+                            <TouchableOpacity
+                                style={[styles.paginationButton, paginaRecargas === totalPaginasRecargas && styles.paginationButtonDisabled]}
+                                onPress={() => setPaginaRecargas(Math.min(totalPaginasRecargas, paginaRecargas + 1))}
+                                disabled={paginaRecargas === totalPaginasRecargas}
+                            >
+                                <Text style={styles.paginationButtonText}>Siguiente</Text>
+                            </TouchableOpacity>
                         </View>
-                    ))
+                    </>
                 )}
             </View>
 

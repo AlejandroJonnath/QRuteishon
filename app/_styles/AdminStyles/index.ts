@@ -397,4 +397,91 @@ export const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: 'bold',
     },
+
+    // (Modal de formulario - cubre pantalla completa)
+    formModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(5, 11, 20, 0.92)',
+        justifyContent: 'flex-end',
+    },
+    formModalContainer: {
+        backgroundColor: '#0B132B',
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        borderTopWidth: 1,
+        borderColor: '#1E293B',
+        maxHeight: '90%',
+    },
+    formModalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+        paddingTop: 20,
+        paddingBottom: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#1E293B',
+    },
+    formModalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+    },
+    formModalClose: {
+        color: '#EF4444',
+        fontWeight: '700',
+        fontSize: 15,
+    },
+    formModalBody: {
+        padding: 24,
+    },
+    createButton: {
+        backgroundColor: '#00E676',
+        borderRadius: 14,
+        paddingVertical: 14,
+        alignItems: 'center',
+        marginTop: 8,
+        marginBottom: 24,
+        shadowColor: '#00E676',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    createButtonText: {
+        color: '#0B132B',
+        fontSize: 15,
+        fontWeight: 'bold',
+        letterSpacing: 0.5,
+    },
+
+    // (Paginación)
+    paginationContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 16,
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#1E293B',
+    },
+    paginationButton: {
+        backgroundColor: '#1E293B',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 8,
+    },
+    paginationButtonDisabled: {
+        opacity: 0.5,
+    },
+    paginationButtonText: {
+        color: '#00E676',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
+    paginationText: {
+        color: '#9CA3AF',
+        fontSize: 14,
+        fontWeight: '600',
+    },
 });
