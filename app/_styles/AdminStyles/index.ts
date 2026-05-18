@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const isSmall = width < 380;
@@ -7,7 +7,7 @@ export const styles = StyleSheet.create({
     // (Layout base)
     container: {
         flex: 1,
-        backgroundColor: '#050B14', // Fondo súper oscuro premium
+        backgroundColor: '#050B14',
     },
     center: {
         justifyContent: 'center',
@@ -17,7 +17,7 @@ export const styles = StyleSheet.create({
         padding: 24,
         paddingBottom: 40,
     },
-    
+
     // (Cabeceras)
     header: {
         marginBottom: 24,
@@ -96,7 +96,7 @@ export const styles = StyleSheet.create({
         color: '#9CA3AF',
         fontWeight: '500',
     },
-    
+
     // (Tarjeta principal gigante)
     bigStatCard: {
         backgroundColor: '#00E676',
@@ -194,7 +194,7 @@ export const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: 14,
     },
-    
+
     // (Items de la lista)
     listItem: {
         flexDirection: 'row',
@@ -303,7 +303,7 @@ export const styles = StyleSheet.create({
         marginBottom: 12,
     },
     buttonDisabled: {
-        backgroundColor: '#00E67680', // Opacidad del 50%
+        backgroundColor: '#00E67680',
         shadowOpacity: 0,
         elevation: 0,
     },

@@ -18,12 +18,19 @@ import { useRequireRole } from '../../hooks/useRequireRole';
 // Desde aquí se obtienen datos como perfil, billetera, movimientos, cupones y funciones de navegación
 import { useClienteLogic } from '../../hooks/ClienteHooks/useClienteLogic';
 
-//Los estilos xd
+// Importamos los estilos de la pantalla del cliente
 import { styles } from '../_styles/ClienteStyles/clienteStyles';
 
+// Sección
+// Este archivo es la pantalla principal del panel de cliente
+// Muestra el saldo actual de la billetera, los botones de acción rápida (pagar con QR y recargar),
+// la tarjeta virtual Q-Ruta, los cupones disponibles y el historial de movimientos recientes
+// También tiene el botón para cerrar sesión al fondo de la pantalla
 
-// Exportamos el componente principal ClientePanel
-// Este componente representa la pantalla principal que verá el usuario con rol cliente
+// Funciones
+// ClientePanel: Componente principal que dibuja toda la interfaz del panel del cliente
+// con todos sus datos financieros y opciones de navegación
+
 export default function ClientePanel() {
 
     // Usamos el hook useRequireRole para verificar que el usuario tenga el rol "cliente"
@@ -301,3 +308,14 @@ export default function ClientePanel() {
         </ScrollView>
     );
 }
+
+/*
+Problemas que se pueden generar si quitan funciones:
+(si quitas ClientePanel la pantalla principal del cliente desaparece y su ruta arrojará un error al entrar)
+(si quitas useRequireRole cualquier usuario sin importar su rol podría ver el panel del cliente)
+(si quitas useClienteLogic no habrá datos para mostrar: ni saldo, ni cupones, ni movimientos)
+(si quitas cargarDatosCliente la pantalla no se actualizará al jalar hacia abajo y los datos quedarán obsoletos)
+(si quitas handleLogout el cliente no podrá cerrar sesión y quedará atrapado en el panel)
+(si quitas irAPagarQr el botón de pagar con QR no llevará a ninguna pantalla)
+(si quitas irARecargar el botón de recargar saldo no llevará a ninguna pantalla)
+*/

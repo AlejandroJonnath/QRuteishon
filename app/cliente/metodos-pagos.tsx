@@ -24,6 +24,16 @@ import { useMetodosPagos } from '../../hooks/ClienteHooks/useMetodosPagos';
 // Y por último importamos los estilos que están en un archivo separado
 import { styles } from '../_styles/ClienteStyles/MetodosPagosStyles';
 
+// Sección
+// Este archivo es la pantalla donde el cliente puede agregar tarjetas de crédito o débito simuladas
+// y ver las que ya tiene registradas en su cuenta
+// IMPORTANTE: No se guardan números reales de tarjeta por seguridad, solo se registran los últimos 4 dígitos
+// Las tarjetas agregadas aquí se usan en la pantalla de recarga para simular pagos al saldo de la billetera
+
+// Funciones
+// MetodosPagoScreen: Componente principal que muestra el formulario para agregar una tarjeta nueva
+// y la lista de las tarjetas ya registradas con la opción de desactivarlas
+
 export default function MetodosPagoScreen() {
     // Verificamos que el usuario sea cliente, si no lo pateamos de acá
     useRequireRole('cliente');
@@ -233,3 +243,12 @@ export default function MetodosPagoScreen() {
         </ScrollView>
     );
 }
+
+/*
+Problemas que se pueden generar si quitan funciones:
+(si quitas MetodosPagoScreen la pantalla de métodos de pago desaparece y los clientes no podrán agregar tarjetas)
+(si quitas useRequireRole cualquier usuario sin rol de cliente podría acceder a agregar o desactivar tarjetas)
+(si quitas agregarMetodoPago el botón de guardar tarjeta no hará nada y nunca se guardará la tarjeta en Supabase)
+(si quitas desactivarMetodo el botón de desactivar tarjeta quedará inactivo y las tarjetas no podrán eliminarse)
+(si quitas el control de loadingData la lista de tarjetas registradas podría mostrar datos incompletos mientras se cargan)
+*/
