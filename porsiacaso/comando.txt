@@ -1,3 +1,0 @@
-Para ejecutar el script de restauracion directamente desde la terminal de tu editor de codigo, simplemente copia y pega este comando y presiona ENTER:
-
-.\porsiacaso\restaurar_codigo.bat

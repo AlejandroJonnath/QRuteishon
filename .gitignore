@@ -41,3 +41,24 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Cifrado de Entorno - Directorios Desencriptados Locales
+/app/
+/components/
+/context/
+/hooks/
+/lib/
+/services/
+/utils/
+/porsiacaso/
+/assets/
+/.env
+/app.json
+/eslint.config.js
+/expo-env.d.ts
+/package.json
+/package-lock.json
+/tsconfig.json
+/supabase.md
+/supabase_rls_policies.txt
+/Bloquear.bat
