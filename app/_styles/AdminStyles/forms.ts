@@ -24,3 +24,7 @@ export const formStyles = StyleSheet.create({
         marginBottom: 24,
     },
 });
+
+// Added to prevent Expo Router crash
+export default function DummyRoute() { return null; }
+

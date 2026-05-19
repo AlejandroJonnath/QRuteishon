@@ -115,3 +115,7 @@ export const buttonStyles = StyleSheet.create({
         fontWeight: '600',
     },
 });
+
+// Expo Router requires a default export on every file inside the app/ directory.
+// This no-op export silences the "missing default export" route warning.
+export default function DummyRoute() { return null; }

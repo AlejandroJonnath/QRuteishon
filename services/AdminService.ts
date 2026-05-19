@@ -1,6 +1,33 @@
-import { supabase } from '../lib/supabase'
-import { createClient } from '@supabase/supabase-js'
-import type { Rol } from './AuthService'
+import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
+import { supabase } from '../lib/supabase';
+import type { Rol } from './AuthService';
+
+// Esquemas para cumplir lo que leí de la metodología OWASP xd 
+const AdminUserSchema = z.object({
+    nombre: z.string().min(2),
+    apellido: z.string().min(2),
+    cedula: z.string().min(10).max(13).optional().nullable(),
+    telefono: z.string().min(10).max(15).optional().nullable(),
+    usuario: z.string().min(3).optional().nullable(),
+    correo: z.string().email().optional().nullable(),
+    rol: z.enum(['admin', 'operador', 'cliente']),
+    gasolinera_id: z.string().uuid().optional().nullable(),
+    estado: z.string().optional().nullable()
+}).strict();
+
+const ActualizarUserSchema = AdminUserSchema.partial();
+
+const AdminCuponSchema = z.object({
+    codigo: z.string().min(4),
+    propietario_id: z.string().nullable().optional(),
+    propietario_rol: z.enum(['cliente', 'operador']).nullable().optional(),
+    tipo_descuento: z.enum(['monto', 'porcentaje']),
+    valor_descuento: z.number().positive(),
+    uso_unico: z.boolean(),
+    estado: z.string(),
+    expira_en: z.string().nullable().optional()
+}).strict();
 
 // (ESTE ARCHIVO ES EL SERVICIO MÁS PODEROSO DE LA APP TIENE ACCESO DE ADMINISTRADOR A SUPABASE LO QUE SIGNIFICA QUE PUEDE CREAR USUARIOS CAMBIAR CONTRASEÑAS Y CONSULTAR MÉTRICAS SIN INTERFERIR CON LA SESIÓN ACTIVA)
 
@@ -43,6 +70,12 @@ export const AdminService = {
     // (Esta función usa el cliente secundario para crear un usuario nuevo en Supabase Auth)
     // (Es vital usar el cliente secundario para no perder la sesión del administrador actual)
     crearUsuario: async (email: string, password: string, userData: any) => {
+        try {
+            AdminUserSchema.parse(userData);
+        } catch (validationError: any) {
+            return { data: null, error: { message: validationError.errors?.[0]?.message || 'Datos de usuario inválidos' } }
+        }
+
         const { data, error } = await supabaseAdminClient.auth.signUp({
             email,
             password,
@@ -57,6 +90,12 @@ export const AdminService = {
 
     // (Actualiza los datos del perfil de un usuario específico en la tabla perfiles)
     actualizarUsuario: async (id: string, datos: any) => {
+        try {
+            ActualizarUserSchema.parse(datos);
+        } catch (validationError: any) {
+            return { error: { message: validationError.errors?.[0]?.message || 'Datos de actualización inválidos' } }
+        }
+
         const { error } = await supabase
             .from('perfiles')
             // (Machacamos los datos viejos con los nuevos)
@@ -84,7 +123,7 @@ export const AdminService = {
         const { data, error } = await supabaseAdminClient.auth.admin.updateUserById(id, {
             password: password
         })
-        
+
         return { data, error }
     },
 
@@ -114,6 +153,12 @@ export const AdminService = {
 
     // (Inserta un solo cupón en la base de datos)
     crearCupon: async (datosCupon: any) => {
+        try {
+            AdminCuponSchema.parse(datosCupon);
+        } catch (validationError: any) {
+            return { error: { message: validationError.errors?.[0]?.message || 'Datos de cupón inválidos' } }
+        }
+
         const { error } = await supabase
             .from('cupones')
             .insert(datosCupon)
@@ -123,6 +168,12 @@ export const AdminService = {
 
     // (Inserta un arreglo completo de cupones de golpe para la generación masiva)
     generarCuponesAutomaticos: async (cupones: any[]) => {
+        try {
+            z.array(AdminCuponSchema).parse(cupones);
+        } catch (validationError: any) {
+            return { error: { message: 'Uno o más cupones generados masivamente tienen formato inválido' } }
+        }
+
         const { error } = await supabase
             .from('cupones')
             // (Un solo insert con todos los cupones del lote es más eficiente que hacerlos uno por uno)
@@ -179,7 +230,7 @@ export const AdminService = {
                 .order('pagado_en', { ascending: false })
                 // (Limitamos a 50 para no descargar toda la historia del sistema)
                 .limit(50),
-            
+
             supabase.from('recargas')
                 .select('id, monto, metodo, created_at')
                 .eq('estado', 'aprobada')

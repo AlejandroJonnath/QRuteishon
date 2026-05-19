@@ -67,3 +67,7 @@ export const cardsStyles = StyleSheet.create({
         borderRadius: 16,
     },
 });
+
+// Added to prevent Expo Router crash
+export default function DummyRoute() { return null; }
+

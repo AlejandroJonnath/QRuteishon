@@ -11,6 +11,8 @@ import {
 
 // Importamos el router de expo para poder navegar entre pantallas
 import { router } from 'expo-router';
+// Importamos la protección contra capturas de pantalla (OWASP MASVS-RESILIENCE)
+import * as ScreenCapture from 'expo-screen-capture';
 
 // Nos traemos los iconos de Ionicons para ponerle más onda a la interfaz
 import { Ionicons } from '@expo/vector-icons';
@@ -37,6 +39,9 @@ import { styles } from '../_styles/ClienteStyles/MetodosPagosStyles';
 export default function MetodosPagoScreen() {
     // Verificamos que el usuario sea cliente, si no lo pateamos de acá
     useRequireRole('cliente');
+
+    // OWASP MASVS-RESILIENCE: Bloqueamos las capturas de pantalla en esta vista financiera
+    ScreenCapture.usePreventScreenCapture();
 
     // Desestructuramos todo lo que nos devuelve el hook para usarlo en la vista
     // (acá tenemos los estados como el tipo de tarjeta, la marca, si está cargando, y las funciones para guardar)

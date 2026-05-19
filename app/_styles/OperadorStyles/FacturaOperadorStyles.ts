@@ -174,4 +174,43 @@ export const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontWeight: '800',
     },
+
+    // Controles de paginación
+    paginacion: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 14,
+        paddingTop: 14,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255,255,255,0.08)',
+    },
+    paginacionBtn: {
+        backgroundColor: 'rgba(0,230,118,0.12)',
+        borderWidth: 1,
+        borderColor: '#00E676',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+    },
+    paginacionBtnDisabled: {
+        backgroundColor: 'rgba(255,255,255,0.04)',
+        borderColor: 'rgba(255,255,255,0.12)',
+    },
+    paginacionBtnText: {
+        color: '#00E676',
+        fontWeight: '900',
+        fontSize: 13,
+    },
+    paginacionBtnTextDisabled: {
+        color: '#4B5563',
+    },
+    paginacionInfo: {
+        color: '#FFFFFF',
+        fontWeight: '800',
+        fontSize: 14,
+    },
 });
+// Added to prevent Expo Router crash
+export default function DummyRoute() { return null; }
+

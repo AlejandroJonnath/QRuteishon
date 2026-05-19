@@ -1,5 +1,33 @@
 import { supabase } from '../lib/supabase'
 import type { MetodoPago } from '../hooks/ClienteHooks/UseRecarga'
+import { z } from 'zod'
+
+// Esquemas de validación estrictos para OWASP Nivel 2
+const RecargaSchema = z.object({
+    usuario_id: z.string(),
+    billetera_id: z.string(),
+    monto: z.number().positive(),
+    metodo: z.enum(['credito', 'debito']),
+    estado: z.string()
+}).strict();
+
+const MovimientoSchema = z.object({
+    usuario_id: z.string(),
+    tipo: z.string(),
+    descripcion: z.string(),
+    monto: z.number(),
+    estado: z.string(),
+    referencia_id: z.string().optional()
+}).strict();
+
+const MetodoPagoSchema = z.object({
+    usuario_id: z.string(),
+    tipo: z.enum(['credito', 'debito']),
+    marca: z.string().nullable().optional(),
+    ultimos_4: z.string().length(4),
+    titular: z.string().nullable().optional(),
+    estado: z.string()
+}).strict();
 
 // (ESTE ARCHIVO MANEJA TODOS LOS MOVIMIENTOS DE DINERO DE LA BILLETERA VIRTUAL DESDE CONSULTAR EL SALDO HASTA PROCESAR UNA RECARGA COMPLETA CON CUPÓN Y REGISTRO EN EL HISTORIAL)
 
@@ -60,6 +88,15 @@ export const BilleteraService = {
         cuponSeleccionado?: any,
         datosMovimientoCupon?: any
     ) => {
+        // Validación Zod
+        try {
+            RecargaSchema.parse(datosRecarga);
+            MovimientoSchema.parse(datosMovimiento);
+            if (datosMovimientoCupon) MovimientoSchema.parse(datosMovimientoCupon);
+        } catch (validationError: any) {
+            return { error: { message: validationError.errors?.[0]?.message || 'Datos inválidos' }, paso: 'validacion' }
+        }
+
         // (Paso 1: Guardamos el registro de la recarga en la tabla de recargas)
         const { data: recarga, error: recargaError } = await supabase
             .from('recargas')
@@ -111,6 +148,12 @@ export const BilleteraService = {
 
     // (Guarda una nueva tarjeta bancaria vinculada al usuario)
     agregarMetodoPago: async (datosMetodo: any) => {
+        try {
+            MetodoPagoSchema.parse(datosMetodo);
+        } catch (validationError: any) {
+            return { error: { message: validationError.errors?.[0]?.message || 'Datos de tarjeta inválidos' } }
+        }
+
         const { error } = await supabase
             .from('metodos_pago')
             .insert(datosMetodo)

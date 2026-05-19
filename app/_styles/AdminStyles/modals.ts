@@ -105,3 +105,7 @@ export const modalStyles = StyleSheet.create({
         letterSpacing: 0.5,
     },
 });
+
+// Added to prevent Expo Router crash
+export default function DummyRoute() { return null; }
+

@@ -15,7 +15,7 @@ import type { Rol } from '../../services/AuthService';
 // redirectByRole: Sirve para revisar el perfil del usuario recién logueado y mandarlo en taxi a su pantalla correcta dependiendo de si es jefe, trabajador o cliente
 
 // (Esta función es asíncrona porque tiene que ir a la base de datos a preguntar quién es este usuario)
-export async function redirectByRole(userId: string) {
+export async function redirectByRole(userId: string): Promise<boolean> {
     // (Le pedimos a Supabase que nos traiga todo el perfil de la persona usando su ID)
     const { data: perfil, error } = await AuthService.obtenerPerfil(userId);
 
@@ -27,7 +27,7 @@ export async function redirectByRole(userId: string) {
             'El usuario existe en Auth pero todavía no se encontró su perfil (intenta iniciar sesión nuevamente)'
         );
         // (Cortamos la ejecución para que no intente seguir)
-        return;
+        return false;
     }
 
     // (Verificamos si su cuenta fue baneada o desactivada por un administrador)
@@ -40,7 +40,7 @@ export async function redirectByRole(userId: string) {
         // (Como está bloqueado, le cerramos la sesión inmediatamente para que no haga trampa)
         await AuthService.cerrarSesion();
         // (Cortamos la ejecución)
-        return;
+        return false;
     }
 
     // (Guardamos qué rol tiene la persona para no escribir perfil.rol a cada rato)
@@ -56,6 +56,9 @@ export async function redirectByRole(userId: string) {
     } else {
         router.replace('/cliente');
     }
+
+    // (Devolvemos true para indicar que la navegación fue exitosa)
+    return true;
 }
 
 /*

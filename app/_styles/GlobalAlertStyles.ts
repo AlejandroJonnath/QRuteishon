@@ -106,3 +106,7 @@ export const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
 });
+
+// Added to prevent Expo Router crash
+export default function DummyRoute() { return null; }
+

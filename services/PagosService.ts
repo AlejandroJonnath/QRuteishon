@@ -1,5 +1,38 @@
-import { supabase } from '../lib/supabase'
-import type { PagoQr } from '../hooks/ClienteHooks/UsePagarQr'
+import { z } from 'zod';
+import type { PagoQr } from '../hooks/ClienteHooks/UsePagarQr';
+import { supabase } from '../lib/supabase';
+
+// Esquemas de seguridad OWASP 
+const CrearPagoSchema = z.object({
+    qr_token: z.string(),
+    operador_id: z.string(),
+    cliente_id: z.string().nullable(),
+    gasolinera_id: z.string(),
+    valor: z.number().positive(),
+    tipo_gasolina: z.enum(['extra', 'super', 'diesel', 'ecopais']),
+    metodo_pago: z.string(),
+    cupon_codigo: z.string().nullable(),
+    descuento: z.number().nonnegative(),
+    total: z.number().positive(),
+    estado: z.string(),
+    expira_en: z.string(),
+    pagado_en: z.string().nullable()
+}).strict();
+
+const CrearFacturaSchema = z.object({
+    pago_id: z.string(),
+    operador_id: z.string(),
+    cliente_id: z.string(),
+    cedula_nombre: z.string().min(2),
+    apellido: z.string().min(2),
+    cedula: z.string().min(10).max(13),
+    telefono: z.string().min(10),
+    correo: z.string().email(),
+    subtotal: z.number().nonnegative(),
+    descuento: z.number().nonnegative(),
+    total: z.number().nonnegative(),
+    estado: z.string()
+}).strict();
 
 // (ESTE ARCHIVO MANEJA ABSOLUTAMENTE TODO EL CICLO DE VIDA DE UN PAGO CON QR DESDE QUE EL OPERADOR LO CREA HASTA QUE EL CLIENTE LO PAGA Y EL OPERADOR EMITE LA FACTURA)
 
@@ -98,6 +131,12 @@ export const PagosService = {
 
     // (Crea el registro inicial de un cobro QR pendiente generado por el operador)
     generarPagoPendiente: async (datosPago: any) => {
+        try {
+            CrearPagoSchema.parse(datosPago);
+        } catch (validationError: any) {
+            return { data: null, error: { message: validationError.errors?.[0]?.message || 'Datos de pago inválidos' } }
+        }
+
         const { data, error } = await supabase
             .from('pagos_qr')
             .insert(datosPago)
@@ -144,6 +183,12 @@ export const PagosService = {
 
     // (Guarda la factura nueva en la tabla de facturas)
     crearFactura: async (datosFactura: any) => {
+        try {
+            CrearFacturaSchema.parse(datosFactura);
+        } catch (validationError: any) {
+            return { error: { message: validationError.errors?.[0]?.message || 'Datos de factura inválidos' } }
+        }
+
         const { error } = await supabase
             .from('facturas')
             .insert(datosFactura)

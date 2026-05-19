@@ -1,5 +1,7 @@
 // Importamos los contenedores y componentes visuales que necesitamos para armar la pantalla
 import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+// Importamos Animated para la animación de entrada al módulo y FadeIn para el efecto de fundido
+import Animated, { FadeIn } from 'react-native-reanimated';
 // Importamos los dibujitos e íconos que usaremos en los botones
 import { Ionicons } from '@expo/vector-icons';
 // Importamos el guardián que se asegura que solo los operadores entren aquí
@@ -42,7 +44,9 @@ export default function OperadorPanel() {
 
     // (Si ya tenemos todo listo, dibujamos la pantalla completa)
     return (
-        // (Usamos ScrollView para que puedan deslizar si la pantalla es muy pequeña)
+        // (Envolvemos en Animated.View para que el contenido del módulo entre con un fundido suave de 300ms)
+        <Animated.View entering={FadeIn.duration(300)} style={{ flex: 1 }}>
+        {/* Usamos ScrollView para que puedan deslizar si la pantalla es muy pequeña */}
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             
             {/* El encabezado saludando al trabajador */}
@@ -140,6 +144,7 @@ export default function OperadorPanel() {
                 <Text style={styles.logoutText}>Cerrar sesión</Text>
             </TouchableOpacity>
         </ScrollView>
+        </Animated.View>
     );
 }
 

@@ -49,6 +49,11 @@ export function useFacturaOperador() {
     // (El pago específico que el operador seleccionó de la lista)
     const [pagoSeleccionado, setPagoSeleccionado] = useState<PagoAprobado | null>(null)
 
+    // (Paginación: cuántos pagos mostramos por página)
+    const ITEMS_POR_PAGINA = 5
+    // (Página actual, arranca en la primera)
+    const [paginaActual, setPaginaActual] = useState(1)
+
     // (Todos estos son los datos personales del cliente que irán en la factura)
     // (La cédula del cliente para la factura)
     const [cedula, setCedula] = useState('')
@@ -105,6 +110,30 @@ export function useFacturaOperador() {
     useEffect(() => {
         cargarPagosAprobados()
     }, [cargarPagosAprobados])
+
+    // (Cuando se recargan los pagos reiniciamos a la primera página)
+    useEffect(() => {
+        setPaginaActual(1)
+    }, [pagos])
+
+    // (Calculamos el total de páginas según cuántos pagos hay)
+    const totalPaginas = Math.max(1, Math.ceil(pagos.length / ITEMS_POR_PAGINA))
+
+    // (Slice de pagos que corresponde a la página actual)
+    const pagosPaginados = pagos.slice(
+        (paginaActual - 1) * ITEMS_POR_PAGINA,
+        paginaActual * ITEMS_POR_PAGINA
+    )
+
+    // (Retrocede una página si no estamos en la primera)
+    function irPaginaAnterior() {
+        setPaginaActual((prev) => Math.max(1, prev - 1))
+    }
+
+    // (Avanza una página si no estamos en la última)
+    function irPaginaSiguiente() {
+        setPaginaActual((prev) => Math.min(totalPaginas, prev + 1))
+    }
 
     // (Función que se llama cuando el operador toca uno de los cobros de la lista)
     async function seleccionarPago(pago: PagoAprobado) {
@@ -258,6 +287,11 @@ export function useFacturaOperador() {
     // (Exportamos todo para que la pantalla dibuje la lista los cuadros y el botón de emitir)
     return {
         pagos,
+        pagosPaginados,
+        paginaActual,
+        totalPaginas,
+        irPaginaAnterior,
+        irPaginaSiguiente,
         pagoSeleccionado,
         cedula,
         setCedula,

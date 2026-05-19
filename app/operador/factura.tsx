@@ -31,6 +31,11 @@ export default function GenerarFactura() {
     // (Le pedimos prestado al cerebro de las facturas todas sus variables y funciones)
     const {
         pagos,
+        pagosPaginados,
+        paginaActual,
+        totalPaginas,
+        irPaginaAnterior,
+        irPaginaSiguiente,
         pagoSeleccionado,
         cedula,
         setCedula,
@@ -99,8 +104,8 @@ export default function GenerarFactura() {
                         Aún no tienes pagos aprobados para facturar.
                     </Text>
                 ) : (
-                    // (Si hay ventas, vamos creando un cuadrito o tarjeta por cada venta usando .map)
-                    pagos.map((pago) => {
+                    // (Si hay ventas, mostramos solo la página actual de 5 pagos)
+                    pagosPaginados.map((pago) => {
                         // (Revisamos si el operador ya le picó a este pago o no)
                         const activo = pagoSeleccionado?.id === pago.id;
 
@@ -161,6 +166,45 @@ export default function GenerarFactura() {
                             </TouchableOpacity>
                         );
                     })
+                )}
+
+                {/* Controles de paginación: solo aparecen si hay más de 5 pagos */}
+                {pagos.length > 5 && (
+                    <View style={styles.paginacion}>
+                        <TouchableOpacity
+                            style={[
+                                styles.paginacionBtn,
+                                paginaActual === 1 && styles.paginacionBtnDisabled,
+                            ]}
+                            onPress={irPaginaAnterior}
+                            disabled={paginaActual === 1}
+                            activeOpacity={0.75}
+                        >
+                            <Text style={[
+                                styles.paginacionBtnText,
+                                paginaActual === 1 && styles.paginacionBtnTextDisabled,
+                            ]}>← Anterior</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.paginacionInfo}>
+                            {paginaActual} / {totalPaginas}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={[
+                                styles.paginacionBtn,
+                                paginaActual === totalPaginas && styles.paginacionBtnDisabled,
+                            ]}
+                            onPress={irPaginaSiguiente}
+                            disabled={paginaActual === totalPaginas}
+                            activeOpacity={0.75}
+                        >
+                            <Text style={[
+                                styles.paginacionBtnText,
+                                paginaActual === totalPaginas && styles.paginacionBtnTextDisabled,
+                            ]}>Siguiente →</Text>
+                        </TouchableOpacity>
+                    </View>
                 )}
             </View>
 

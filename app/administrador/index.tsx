@@ -7,6 +7,8 @@ import {
     ScrollView,
     RefreshControl,
 } from 'react-native';
+// Importamos Animated para la animación de entrada al módulo y FadeIn para el efecto de fundido
+import Animated, { FadeIn } from 'react-native-reanimated';
 // Importamos los íconos para los botones del menú
 import { Ionicons } from '@expo/vector-icons';
 // Importamos el guardián que bloquea la pantalla si el usuario no tiene el rol de admin
@@ -66,7 +68,10 @@ export default function AdminPanel() {
     }
 
     return (
-        // (Pantalla desplazable verticalmente)
+        // (Envolvemos en Animated.View para que el contenido del módulo entre con un fundido suave de 300ms)
+        // (Esto le da al usuario la percepción visual de que realmente cambió de pantalla)
+        <Animated.View entering={FadeIn.duration(300)} style={{ flex: 1 }}>
+        {/* Pantalla desplazable verticalmente */}
         <ScrollView
             style={styles.container}
             contentContainerStyle={styles.content}
@@ -217,6 +222,7 @@ export default function AdminPanel() {
                 <Text style={styles.logoutText}>Cerrar sesión</Text>
             </TouchableOpacity>
         </ScrollView>
+        </Animated.View>
     );
 }
 

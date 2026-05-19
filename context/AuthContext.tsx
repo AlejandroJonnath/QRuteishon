@@ -55,51 +55,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) { // A
     }
 
 
-    useEffect(() => { //Ejecuta toda la lógica de manera automática cuando el componente AuthProvider se monta
+    useEffect(() => {
+        // Registramos el listener PRIMERO (práctica recomendada por Supabase).
+        // Ignoramos INITIAL_SESSION porque loadSession() ya maneja el arranque
+        // completo: así evitamos que loading=false se emita dos veces con perfil=null
+        // en el medio, que era la causa del parpadeo al iniciar sesión.
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
 
-        async function loadSession() { // Definimos una función asíncrona para cargar la sesión actual
+            // (El evento inicial ya lo maneja loadSession; lo ignoramos aquí)
+            if (event === 'INITIAL_SESSION') return;
 
-            const { data } = await supabase.auth.getSession(); //Obtenemos la sesión actual guardada en supabase
+            // (Ponemos loading en true para avisarle a la app que estamos transicionando de sesión y buscando el perfil)
+            // (Esto evita que useIndexLogic se desespere y nos devuelva al login porque el perfil aún es null)
+            setLoading(true);
 
+            setSession(currentSession);
 
-            setSession(data.session); //Guarda la sesión actual en el estado
-
-
-            if (data.session?.user) { //Verificación para ver si existe una sesión y usuario autenticado
-
-                await loadPerfil(data.session.user.id); //Cargamos el perfil del usuario autenticado usando su ID
-            }
-
-            setLoading(false); //Indica que ya termino la primera carga xd
-        }
-
-        loadSession(); // Ejecutamos la función que cargará la sesión inicial
-
-        const { // Creamos una constante listener para detectar cambios en el estado de autenticación 
-
-            data: { subscription }, // extraemos la suscripción del listener de auth}
-
-        } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
-
-            setSession(currentSession);// Guarda la nueva sesión actual en el estado
-
-
-            if (currentSession?.user) { //Verificamos si la sesión actual tiene el usuario autenticado
-
-                await loadPerfil(currentSession.user.id); //cargamos el perfil del usuario autenticado
-
+            if (currentSession?.user) {
+                // (Esperamos a que el perfil cargue ANTES de bajar loading)
+                await loadPerfil(currentSession.user.id);
             } else {
-
-                setPerfil(null); //Si no hay usuario, limpia el perfíl
+                setPerfil(null);
             }
 
-            setLoading(false); // Indicará que ya terminó la carga después del cambio de autenticación
+            // (loading=false solo DESPUÉS de que el perfil esté listo)
+            setLoading(false);
         });
 
+        // (loadSession maneja la carga inicial: sesión + perfil + loading=false)
+        async function loadSession() {
+            const { data } = await supabase.auth.getSession();
 
-        return () => { //Retornamos una función de limpieza cuando el componente se desmonta
+            setSession(data.session);
 
-            subscription.unsubscribe(); //Cancelamos la suscripción al listener de auth para evitar fugas de memoria
+            if (data.session?.user) {
+                await loadPerfil(data.session.user.id);
+            }
+
+            setLoading(false);
+        }
+
+        loadSession();
+
+        return () => {
+            subscription.unsubscribe();
         };
     }, []);
 

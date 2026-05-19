@@ -6,9 +6,12 @@
 // ActivityIndicator muestra un indicador de carga
 // RefreshControl permite actualizar la pantalla deslizando hacia abajo
 import { ScrollView, View, Text, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+// Importamos Animated para la animación de entrada al módulo y FadeIn para el efecto de fundido
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { router } from 'expo-router';// router permite navegar entre pantallas de la aplicación.
 import { Ionicons } from '@expo/vector-icons';//Ionicons permite usar íconos dentro de la interfaz
-
+// Importamos la protección contra capturas de pantalla (OWASP MASVS-RESILIENCE)
+import * as ScreenCapture from 'expo-screen-capture';
 
 // Este hook se usa para validar que el usuario tenga el rol correcto
 // En este caso, se usará para verificar que el usuario sea cliente
@@ -36,6 +39,9 @@ export default function ClientePanel() {
     // Usamos el hook useRequireRole para verificar que el usuario tenga el rol "cliente"
     // loading indica si todavía se está validando el rol o la sesión
     const { loading } = useRequireRole('cliente');
+
+    // OWASP MASVS-RESILIENCE: Bloqueamos las capturas de pantalla en esta vista financiera
+    ScreenCapture.usePreventScreenCapture();
 
     // Usamos el hook useClienteLogic para obtener toda la lógica y datos del cliente
     // Este hook separa la lógica de negocio de la interfaz visual
@@ -78,9 +84,11 @@ export default function ClientePanel() {
 
     //Retornamos la UI principal al cliente
     return (
-        // ScrollView permite que todo el contenido sea desplazable
-        // Esto es útil porque la pantalla tiene varias secciones:
-        // saldo, botones, tarjeta, cupones, movimientos y logout
+        // (Envolvemos en Animated.View para que el contenido del módulo entre con un fundido suave de 300ms)
+        <Animated.View entering={FadeIn.duration(300)} style={{ flex: 1 }}>
+        {/* ScrollView permite que todo el contenido sea desplazable */}
+        {/* Esto es útil porque la pantalla tiene varias secciones: */}
+        {/* saldo, botones, tarjeta, cupones, movimientos y logout */}
         <ScrollView
             style={styles.container}
             contentContainerStyle={styles.content}
@@ -306,6 +314,7 @@ export default function ClientePanel() {
                 <Text style={styles.logoutText}>Cerrar sesión</Text>
             </TouchableOpacity>
         </ScrollView>
+        </Animated.View>
     );
 }
 

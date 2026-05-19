@@ -6,8 +6,8 @@ import { CustomAlert } from '../../utils/AlertManager';
 import { AuthService } from '../../services/AuthService';
 // Importamos validarCorreo para asegurarnos de que el texto ingresado sí parece un correo de verdad
 import { validarCorreo } from '../../utils/validators';
-// Importamos redirectByRole que es el taxi que lleva al usuario a su pantalla correcta luego de entrar
-import { redirectByRole } from './authUtils';
+// Importamos router para poder redirigir al usuario al index luego de iniciar sesión
+import { router } from 'expo-router';
 
 // Sección
 // Este archivo es el corazón de la pestaña de iniciar sesión
@@ -60,23 +60,25 @@ export function useLoginForm() {
             // (Si Supabase nos rebota porque la clave está mal, le avisamos al usuario)
             if (error) {
                 CustomAlert.alert('Error al iniciar sesión', error.message);
+                setLoading(false);
                 return;
             }
 
             // (Por si acaso verificamos que el usuario sí llegó en la respuesta secreta)
             if (!data.user) {
                 CustomAlert.alert('Error', 'No se pudo obtener el usuario');
+                setLoading(false);
                 return;
             }
 
-            // (Si todo fue perfecto llamamos al taxi para que lo mande a su pantalla)
-            await redirectByRole(data.user.id);
+            // (Login exitoso: apagamos el spinner y redirigimos a la pantalla de carga principal '/')
+            // (Allí, useIndexLogic esperará a que AuthContext termine de cargar el perfil y decidirá a qué panel enviarnos)
+            setLoading(false);
+            router.replace('/');
         } catch (error) {
             // (Por si el internet se corta de golpe o explota el servidor)
             console.log(error);
             CustomAlert.alert('Error inesperado', 'Ocurrió un problema al iniciar sesión');
-        } finally {
-            // (Pase lo que pase apagamos la ruedita de carga)
             setLoading(false);
         }
     }

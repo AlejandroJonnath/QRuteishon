@@ -27,8 +27,8 @@ export default function RootLayout() {
       {/* Stack define el sistema de navegación principal de la app. */}
       {/* screenOptions permite configurar opciones generales para todas las pantallas del Stack */}
       {/* headerShown: false oculta el encabezado automático que Expo Router muestra por defecto */}
-      {/* Esto es útil cuando queremos diseñar nuestros propios headers o pantallas completas */}
-      <Stack screenOptions={{ headerShown: false }} />
+      {/* animation: 'fade' aplica un crossfade suave de ~250ms entre cada pantalla, eliminando los cortes bruscos */}
+      <Stack screenOptions={{ headerShown: false, animation: 'fade' }} />
       <GlobalAlert />
     </AuthProvider>
   );

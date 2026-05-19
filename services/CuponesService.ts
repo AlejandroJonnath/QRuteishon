@@ -1,6 +1,19 @@
 import { supabase } from '../lib/supabase'
 import type { CuponRecarga } from '../hooks/ClienteHooks/UseRecarga'
 import type { CuponOperador } from '../hooks/OperadorHooks/UseCuponesOperador'
+import { z } from 'zod'
+
+// OWASP Nivel 2: Validación estricta para cupones
+const CrearCuponSchema = z.object({
+    codigo: z.string().min(4),
+    propietario_id: z.string(),
+    propietario_rol: z.enum(['cliente', 'operador']),
+    tipo_descuento: z.enum(['monto', 'porcentaje']),
+    valor_descuento: z.number().positive(),
+    uso_unico: z.boolean(),
+    estado: z.string(),
+    expira_en: z.string().nullable().optional()
+}).strict();
 
 // (ESTE ARCHIVO MANEJA TODAS LAS OPERACIONES RELACIONADAS CON LOS CUPONES DE DESCUENTO TANTO PARA CLIENTES COMO PARA OPERADORES)
 
@@ -47,6 +60,12 @@ export const CuponesService = {
 
     // (Inserta un cupón nuevo en la base de datos)
     crearCupon: async (datosCupon: any) => {
+        try {
+            CrearCuponSchema.parse(datosCupon);
+        } catch (validationError: any) {
+            return { error: { message: validationError.errors?.[0]?.message || 'Datos de cupón inválidos' } }
+        }
+
         const { error } = await supabase
             .from('cupones')
             .insert(datosCupon)

@@ -15,3 +15,7 @@ export const styles = {
     ...modalStyles,
     ...paginationStyles,
 };
+
+// Added to prevent Expo Router crash
+export default function DummyRoute() { return null; }
+
