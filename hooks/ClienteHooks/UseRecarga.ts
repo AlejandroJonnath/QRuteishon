@@ -168,7 +168,7 @@ export function useRecarga() {
             // (Apagamos el spinner de carga inicial)
             setLoadingData(false)
         }
-    }, [usuarioId, metodoPagoSeleccionado])
+    }, [usuarioId])
 
     // (Efecto que carga los datos apenas el usuario entra a la pantalla de recargar)
     useEffect(() => {

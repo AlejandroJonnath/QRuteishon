@@ -1,9 +1,25 @@
 import { supabase } from '../lib/supabase'
+import { z } from 'zod'; // Importamos Zod para validación estricta de datos (OWASP M7/M4)
 
 // (ESTE ARCHIVO ES EL PORTERO OFICIAL DE LA APP SE ENCARGA DE TODO LO RELACIONADO CON LA AUTENTICACIÓN DE USUARIOS COMO INICIAR SESIÓN REGISTRARSE CERRAR SESIÓN Y BUSCAR PERFILES)
 
 // (Los únicos tres roles que reconoce nuestra aplicación para controlar el acceso)
 export type Rol = 'cliente' | 'operador' | 'admin'
+
+// (Esquema estricto para validar los datos de registro y evitar inyecciones o escalamiento de privilegios como inyectar rol='admin')
+const RegisterSchema = z.object({
+    email: z.string().email("Correo electrónico inválido"),
+    password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+    userData: z.object({
+        nombre: z.string().min(2, "El nombre es obligatorio"),
+        apellido: z.string().min(2, "El apellido es obligatorio"),
+        cedula: z.string().optional(),
+        telefono: z.string().optional(),
+        usuario: z.string().optional(),
+        correo: z.string().optional(),
+        // NOTA DE SEGURIDAD: strict() asegura que si el atacante envía campos extra (como 'rol' o 'estado'), la petición sea rechazada
+    }).strict() 
+});
 
 // (Objeto que agrupa todos los métodos de autenticación y consulta de perfiles)
 export const AuthService = {
@@ -48,6 +64,14 @@ export const AuthService = {
 
     // (Crea una cuenta nueva en Supabase Auth y dispara el trigger de la base de datos para crear el perfil)
     registrarse: async (email: string, password: string, userData: any) => {
+        // (OWASP M7/M4: Validamos los datos antes de enviarlos a la API para evitar inyección y Mass Assignment)
+        try {
+            RegisterSchema.parse({ email, password, userData });
+        } catch (validationError: any) {
+            // Retornamos el error de validación para que la UI lo maneje de forma segura sin romper la app
+            return { data: null, error: { message: validationError.errors?.[0]?.message || 'Datos de registro inválidos' } };
+        }
+
         const { data, error } = await supabase.auth.signUp({
             email,
             password,

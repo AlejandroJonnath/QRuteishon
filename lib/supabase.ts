@@ -1,5 +1,5 @@
 import 'react-native-url-polyfill/auto'; //Importamos esto para que react native pueda manejar las url's correctamente, es algo necesario para que SupaBase funcione bien en entornos móviles
-import AsyncStorage from '@react-native-async-storage/async-storage'; //Permitirá guardar datos de forma persistente en el dispositivo
+import * as SecureStore from 'expo-secure-store'; //Permitirá guardar datos de forma encriptada en el dispositivo (OWASP M2)
 import { AppState, Platform } from 'react-native'; // Sirve para detectar si la app está activa o en segundo plano, y el Platform sirve para saber si la app se está ejecutando en web, Android o IOS
 import { createClient, processLock } from '@supabase/supabase-js'; //Creamos la conexión con Supabase y el processLock para manejar los procesos de auth en React Native
 
@@ -22,18 +22,44 @@ if (!supabaseAnonKey) { // Lo mismo de arriba pero con la clave pública de anon
 // Verificamos si estamos en un entorno donde no hay "window" (como el Server-Side Rendering de Expo)
 const isSSR = Platform.OS === 'web' && typeof window === 'undefined';
 
-// Un storage de mentira para que Supabase no intente leer de AsyncStorage en el servidor (que rompe la app)
+// Un storage de mentira para que Supabase no intente leer de SecureStore en el servidor (que rompe la app)
 const dummyStorage = {
     getItem: () => null,
     setItem: () => { },
     removeItem: () => { },
 };
 
+// Adaptador de Storage seguro
+let storageAdapter: any;
+
+if (Platform.OS === 'web') {
+    // En Web, SecureStore no funciona, así que usamos localStorage o el dummy para SSR
+    storageAdapter = {
+        getItem: (key: string) => {
+            if (typeof window !== 'undefined') return window.localStorage.getItem(key);
+            return null;
+        },
+        setItem: (key: string, value: string) => {
+            if (typeof window !== 'undefined') window.localStorage.setItem(key, value);
+        },
+        removeItem: (key: string) => {
+            if (typeof window !== 'undefined') window.localStorage.removeItem(key);
+        },
+    };
+} else {
+    // En Móvil, usamos expo-secure-store (OWASP M2)
+    storageAdapter = {
+        getItem: (key: string) => SecureStore.getItemAsync(key),
+        setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
+        removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+    };
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, { //Crearemos y exportaremos el cliente de SupaBase para usarlo en toda la app
 
     auth: { //configuramos el módulo de auth de SupaBase
 
-        storage: isSSR ? dummyStorage : AsyncStorage as any, //Usamos el AsyncStorage, excepto en SSR donde usamos el dummy
+        storage: storageAdapter as any, //Usamos SecureStore en móvil y localStorage en web
 
         autoRefreshToken: true,//Haremos que SupaBase renueve automáticamente el token de iniciar sesión
 
