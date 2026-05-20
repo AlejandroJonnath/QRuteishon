@@ -5,19 +5,16 @@
 :: Desactiva la impresion en consola de los comandos que se ejecutan (para mantener limpia la terminal)
 @echo off
 :: Establece el titulo de la ventana de la consola (para identificar de que se trata el proceso)
-title Desbloquear Proyecto - QRuteishon
+title Desbloquear Proyecto - Q Ruta
 :: Limpia toda la pantalla de la consola (removiendo cualquier texto anterior que haya quedado en la sesion)
 cls
 :: Cambia el color de la terminal a azul cian claro con fondo negro (para darle un estilo visual retro y agradable)
 color 0B
 :: Imprime una linea en blanco en la terminal (dando aire visual a la consola)
 echo.
-:: Muestra una cabecera decorativa en la pantalla (creando la estetica cyber-terminal del proyecto)
-echo   =========================================================
-echo     DESBLOQUEAR ENTORNO DE DESARROLLO - QRUTEISHON
-echo   =========================================================
+echo     DESBLOQUEAR ENTORNO DE DESARROLLO - Q RUTA
 echo.
-:: Muestra al desarrollador un mensaje informativo indicando que el codigo fuente esta actualmente seguro y encriptado
+:: Muestra al desarrollador un mensaje indicando que el codigo fuente esta actualmente seguro y encriptado
 echo   [SISTEMA PROTEGIDO] El codigo fuente esta cifrado con AES-256-CBC.
 echo.
 :: Solicita al usuario ingresar su clave de seguridad por teclado y la guarda en la variable KEY (el parametro /p indica entrada de usuario)
@@ -62,9 +59,9 @@ exit /b
 :: Cambia el color de la consola a verde brillante con fondo negro (para denotar exito)
 color 0A
 :: Muestra una caja decorativa felicitando al usuario por el desbloqueo exitoso de sus archivos
-echo   =========================================================
+
 echo     ¡DESBLOQUEO EXITOSO! Carpetas restauradas con exito.
-echo   =========================================================
+
 :: Informa que el entorno de desarrollo esta listo y que ya se puede programar en VS Code o iniciar Expo Router
 echo   Ahora puedes abrir VS Code o ejecutar "npm run start".
 :: Salta a la etiqueta END para finalizar el flujo del programa
@@ -75,7 +72,7 @@ goto END
 :: Cambia el color de la consola a rojo brillante con fondo negro (para alertar del fallo de seguridad)
 color 0C
 :: Muestra un mensaje informando que la clave es incorrecta y que los archivos siguen encriptados
-echo   [ERROR] La clave de descifrado es incorrecta.
+echo   [ERROR] Ponte pilas que esa no es la clave.
 echo   El codigo fuente permanece protegido y cifrado.
 :: Salta a la etiqueta END para finalizar
 goto END
