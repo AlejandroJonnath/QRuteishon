@@ -1,31 +1,54 @@
+// Importa el modulo del sistema de archivos nativo de Node (para poder leer y escribir archivos y carpetas en el disco)
 const fs = require('fs');
+// Importa el modulo para manejar y resolver rutas de archivos de forma compatible entre sistemas operativos
 const path = require('path');
+// Importa el modulo de compresion nativo (para poder comprimir y descomprimir los datos usando el algoritmo GZIP)
 const zlib = require('zlib');
+// Importa el modulo de criptografia nativo (para poder realizar operaciones de hashing SHA-256 y cifrado AES-256-CBC)
 const crypto = require('crypto');
 
 // SECCION
 // Este archivo de codigo sirve como el motor criptografico del proyecto realizando la lectura recursiva compresion y cifrado AES-256-CBC de todos los archivos sensibles para guardarlos en un solo archivo protegido y asimismo realiza la operacion contraria para restaurarlos en su sitio original en disco
 
-// Define el listado de todas las carpetas y archivos criticos del entorno que deben ser protegidos y posteriormente purgados del disco
+// Define el listado de carpetas y archivos que seran procesados por el motor criptografico
 const TARGET_PATHS = [
+    // Representa la carpeta que contiene las vistas y pantallas principales basadas en Expo Router
     'app',
+    // Representa la carpeta de componentes reutilizables de la interfaz de usuario de la aplicacion
     'components',
+    // Representa la carpeta de contextos para el manejo de estado global de React
     'context',
+    // Representa la carpeta de hooks personalizados para la logica de negocio en React
     'hooks',
+    // Representa la carpeta de librerias de configuracion compartida como Supabase
     'lib',
+    // Representa la carpeta de servicios para realizar llamadas a la API y Supabase
     'services',
+    // Representa la carpeta de utilidades auxiliares y funciones formateadoras
     'utils',
+    // Representa la carpeta local de respaldos de seguridad que tambien sera encriptada
     'porsiacaso',
+    // Representa la carpeta que contiene las imagenes y recursos estaticos de la aplicacion
     'assets',
+    // Representa el archivo de configuracion de variables de entorno local
     '.env',
+    // Representa el archivo de configuracion global de la aplicacion Expo
     'app.json',
+    // Representa el archivo de configuracion de reglas de estilo de linter ESLint
     'eslint.config.js',
+    // Representa el archivo de definiciones de variables de entorno de TypeScript de Expo
     'expo-env.d.ts',
+    // Representa el archivo de manifiesto de dependencias de Node
     'package.json',
+    // Representa el archivo que bloquea y registra las versiones exactas de las dependencias
     'package-lock.json',
+    // Representa el archivo de configuracion del compilador de TypeScript
     'tsconfig.json',
+    // Representa la guia de documentacion sobre la base de datos Supabase
     'supabase.md',
+    // Representa las politicas de seguridad RLS de Supabase en texto plano
     'supabase_rls_policies.txt',
+    // Representa el script de Windows para cifrar que se auto-eliminara tras terminar
     'Bloquear.bat'
 ];
 // Configura el algoritmo de cifrado simetrico estandar de la industria con clave de 256 bits y encadenamiento de bloques
@@ -39,7 +62,7 @@ function getAllFiles(dirPath, arrayOfFiles = []) {
     // Lee la lista de nombres de archivos y carpetas contenidos en el directorio especificado de forma sincrona
     const files = fs.readdirSync(dirPath);
 
-    // Itera secuencialmente sobre cada elemento encontrado en la carpeta leida
+    // Itera de forma secuencial sobre cada elemento del arreglo de archivos leidos
     files.forEach(file => {
         // Construye la ruta absoluta correspondiente al elemento actual combinando la ruta base y el nombre
         const fullPath = path.join(dirPath, file);
@@ -47,6 +70,7 @@ function getAllFiles(dirPath, arrayOfFiles = []) {
         if (fs.statSync(fullPath).isDirectory()) {
             // Invoca recursivamente a la propia funcion para continuar buscando archivos dentro de esa subcarpeta
             getAllFiles(fullPath, arrayOfFiles);
+        // Si el elemento analizado es un archivo fisico normal
         } else {
             // Añade la ruta del archivo encontrado al final del arreglo acumulativo
             arrayOfFiles.push(fullPath);
@@ -390,10 +414,10 @@ if (command === 'encrypt') {
 }
 
 // ANÁLISIS DE PROBLEMAS SI SE QUITAN LAS FUNCIONES:
-// si quitas la funcion getAllFiles pasa que el empaquetador no podra explorar el interior de las subcarpetas del proyecto (como app/ o components/) provocando que el archivo src.enc quede vacio y perdiendo todo tu codigo fuente
-// si quitas la funcion packPaths pasa que el motor no recopilara ningun archivo de tu computadora y el comando de bloqueo fallara lanzando un error por falta de datos para cifrar
-// si quitas la funcion deletePaths pasa que los archivos y carpetas sensibles continuaran expuestos en tu disco duro despues de encriptar (anulando el proposito de proteccion del sistema)
-// si quitas la funcion unpackPaths pasa que al introducir la clave correcta el descifrador no escribira ningun archivo en tu disco (dejando el entorno eternamente oculto en src.enc)
-// si quitas la funcion verifyMandatoryPaths pasa que el script no validara la presencia de carpetas esenciales (permitiendo que un doble clic accidental en Bloquear.bat cuando el proyecto ya esta cerrado sobrescriba tu boveda real con una vacia destruyendo tu codigo para siempre)
-// si quitas la funcion encrypt pasa que el sistema sera incapaz de empaquetar comprimir y cifrar tus archivos con AES-256 impidiendo cerrar el entorno para subirlo seguro a GitHub
-// si quitas la funcion decrypt pasa que jamas podras volver a leer tu codigo fuente en texto plano desde el archivo src.enc (quedando el proyecto bloqueado permanentemente bajo llave)
+// "si quitas la funcion getAllFiles pasa que el empaquetador no podra explorar el interior de las subcarpetas del proyecto (como app/ o components/) provocando que el archivo src.enc quede vacio y perdiendo todo tu codigo fuente"
+// "si quitas la funcion packPaths pasa que el motor no recopilara ningun archivo de tu computadora y el comando de bloqueo fallara lanzando un error por falta de datos para cifrar"
+// "si quitas la funcion deletePaths pasa que los archivos y carpetas sensibles continuaran expuestos en tu disco duro despues de encriptar (anulando el proposito de proteccion del sistema)"
+// "si quitas la funcion unpackPaths pasa que al introducir la clave correcta el descifrador no escribira ningun archivo en tu disco (dejando el entorno eternamente oculto en src.enc)"
+// "si quitas la funcion verifyMandatoryPaths pasa que el script no validara la presencia de carpetas esenciales (permitiendo que un doble clic accidental en Bloquear.bat cuando el proyecto ya esta cerrado sobrescriba tu boveda real con una vacia destruyendo tu codigo para siempre)"
+// "si quitas la funcion encrypt pasa que el sistema sera incapaz de empaquetar comprimir y cifrar tus archivos con AES-256 impidiendo cerrar el entorno para subirlo seguro a GitHub"
+// "si quitas la funcion decrypt pasa que jamas podras volver a leer tu codigo fuente en texto plano desde el archivo src.enc (quedando el proyecto bloqueado permanentemente bajo llave)"

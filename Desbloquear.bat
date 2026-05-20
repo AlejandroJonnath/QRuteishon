@@ -98,9 +98,9 @@ echo   Presiona cualquier tecla para salir...
 :: Pausa la consola para que el usuario pueda leer los resultados en pantalla antes de que se cierre sola
 pause > nul
 
-// ANÁLISIS DE PROBLEMAS SI SE QUITAN LAS FUNCIONES:
-// si quitas la comparacion if "%KEY%"=="" goto EMPTY_KEY pasa que el script intentara ejecutar Node con una clave vacia lo cual provocara un error de argumento en crypt-env.js y cerrara el programa abruptamente
-// si quitas la ejecucion de node scripts\crypt-env.js decrypt "%KEY%" pasa que nunca se invocara el motor de descifrado y las carpetas de codigo jamas se restauraran en tu disco duro (quedando el proyecto inservible en su estado encriptado)
-// si quitas la comprobacion de EXIT_CODE pasa que el script siempre dira que fue exitoso o mostrara pantallas equivocadas incluso si la clave ingresada era incorrecta (confundiendo al desarrollador)
-// si quitas las etiquetas :SUCCESS :WRONG_KEY o :GENERIC_ERROR pasa que el archivo por lotes de Windows no sabra a donde saltar y lanzara un error de sintaxis del sistema de archivos .bat deteniendo la ejecucion
-// si quitas la pausa pause > nul del final pasa que la consola de comandos se cerrara instantaneamente en una fraccion de segundo despues de procesar y el desarrollador no podra ver si el descifrado tuvo exito o fallo
+::ANÁLISIS DE PROBLEMAS SI SE QUITAN LAS FUNCIONES:
+::"si quitas la comparacion if "%KEY%"=="" goto EMPTY_KEY pasa que el script intentara ejecutar Node con una clave vacia lo cual provocara un error de argumento en crypt-env.js y cerrara el programa abruptamente"
+::"si quitas la ejecucion de node scripts\crypt-env.js decrypt "%KEY%" pasa que nunca se invocara el motor de descifrado y las carpetas de codigo jamas se restauraran en tu disco duro (quedando el proyecto inservible en su estado encriptado)"
+::"si quitas la comprobacion de EXIT_CODE pasa que el script siempre dira que fue exitoso o mostrara pantallas equivocadas incluso si la clave ingresada era incorrecta (confundiendo al desarrollador)"
+::"si quitas las etiquetas :SUCCESS :WRONG_KEY o :GENERIC_ERROR pasa que el archivo por lotes de Windows no sabra a donde saltar y lanzara un error de sintaxis del sistema de archivos .bat deteniendo la ejecucion"
+::"si quitas la pausa pause > nul del final pasa que la consola de comandos se cerrara instantaneamente en una fraccion de segundo despues de procesar y el desarrollador no podra ver si el descifrado tuvo exito o fallo"
