@@ -1,11 +1,9 @@
 @echo off
-title Desbloquear Proyecto - QRuteishon
+title Desbloquear Proyecto - Q-Ruta
 cls
 color 0B
 echo.
-echo   =========================================================
-echo     DESBLOQUEAR ENTORNO DE DESARROLLO - QRUTEISHON
-echo   =========================================================
+echo     DESBLOQUEAR ENTORNO DE DESARROLLO - Q-Ruta
 echo.
 echo   [SISTEMA PROTEGIDO] El codigo fuente esta cifrado con AES-256-CBC.
 echo.
@@ -34,10 +32,8 @@ exit /b
 
 :SUCCESS
 color 0A
-echo   =========================================================
 echo     ¡DESBLOQUEO EXITOSO! Carpetas restauradas con exito.
-echo   =========================================================
-echo   Ahora puedes abrir VS Code o ejecutar "npm run start".
+echo   Ahora puedes abrir VS Code o ejecutar "npx expo start".
 goto END
 
 :WRONG_KEY
