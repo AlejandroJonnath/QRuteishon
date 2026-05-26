@@ -32,6 +32,10 @@ const TARGET_PATHS = [
     'assets',
     // Representa el archivo de configuracion de variables de entorno local
     '.env',
+    // Archivo de ignorados especifico de EAS
+    '.easignore',
+    // Archivo de configuracion de EAS Build
+    'eas.json',
     // Representa el archivo de configuracion global de la aplicacion Expo
     'app.json',
     // Representa el archivo de configuracion de reglas de estilo de linter ESLint
