@@ -1,4 +1,4 @@
-# Proyecto QRuteishon - Documentación Técnica y Arquitectura
+# Proyecto QRuta - Documentación Técnica y Arquitectura
 
 ## Estructura de Carpetas y Archivos
 
