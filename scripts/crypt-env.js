@@ -50,8 +50,8 @@ const TARGET_PATHS = [
     'tsconfig.json',
     // Representa la guia de documentacion sobre la base de datos Supabase
     'supabase.md',
-    // Representa las politicas de seguridad RLS de Supabase en texto plano
-    'supabase_rls_policies.txt',
+    // Representa los scripts de auditoria OWASP creados recientemente
+    'owasp_auditor.py',
     // Representa el script de Windows para cifrar que se auto-eliminara tras terminar
     'Bloquear.bat'
 ];
@@ -74,7 +74,7 @@ function getAllFiles(dirPath, arrayOfFiles = []) {
         if (fs.statSync(fullPath).isDirectory()) {
             // Invoca recursivamente a la propia funcion para continuar buscando archivos dentro de esa subcarpeta
             getAllFiles(fullPath, arrayOfFiles);
-        // Si el elemento analizado es un archivo fisico normal
+            // Si el elemento analizado es un archivo fisico normal
         } else {
             // Añade la ruta del archivo encontrado al final del arreglo acumulativo
             arrayOfFiles.push(fullPath);
@@ -115,7 +115,7 @@ function packPaths() {
                     // Incrementa en uno el contador general de archivos empaquetados
                     totalFiles++;
                 });
-            // Si no es un directorio, evalua si es un archivo individual en la raiz
+                // Si no es un directorio, evalua si es un archivo individual en la raiz
             } else if (stat.isFile()) {
                 // Genera la ruta relativa del archivo en la raiz limpiando los separadores de ruta
                 const relativePath = item.replace(/\\/g, '/');
@@ -154,14 +154,14 @@ function deletePaths() {
                     fs.rmSync(itemPath, { recursive: true, force: true });
                     // Imprime en la consola el nombre de la carpeta que ha sido removida
                     console.log(`[ELIMINADO] Carpeta: ${item}`);
-                // Si en cambio corresponde a un archivo en la raiz
+                    // Si en cambio corresponde a un archivo en la raiz
                 } else if (stat.isFile()) {
                     // Borra de forma definitiva el archivo del sistema
                     fs.unlinkSync(itemPath);
                     // Informa en la consola la eliminacion del archivo correspondiente
                     console.log(`[ELIMINADO] Archivo: ${item}`);
                 }
-            // Captura cualquier error producido en el proceso de eliminacion (como permisos insuficientes o archivos bloqueados EBUSY)
+                // Captura cualquier error producido en el proceso de eliminacion (como permisos insuficientes o archivos bloqueados EBUSY)
             } catch (err) {
                 // Emite una advertencia informativa detallando que elemento no se pudo borrar (dejando continuar el script)
                 console.warn(`[ADVERTENCIA] No se pudo eliminar completamente '${item}'. Detalle: ${err.message}`);
@@ -217,7 +217,7 @@ function verifyMandatoryPaths() {
 function encrypt(password) {
     // Muestra en la pantalla de la consola el inicio formal de la operacion de cifrado y empaquetado
     console.log("=== INICIANDO PROCESO DE CIFRADO DEL ENTORNO ===");
-    
+
     // Ejecuta la validacion de rutas obligatorias para prevenir el borrado accidental de una copia de seguridad en uso
     const missing = verifyMandatoryPaths();
     // Si hace falta algun elemento esencial (indicando que el entorno ya podria estar bloqueado)
@@ -251,24 +251,24 @@ function encrypt(password) {
     const jsonString = JSON.stringify(packedData);
     // Comprime el string JSON en formato binario usando GZIP (para reducir considerablemente el tamaño final)
     const compressed = zlib.gzipSync(Buffer.from(jsonString, 'utf-8'));
-    
+
     // Aplica un hash SHA-256 a la contraseña escrita por el usuario para generar una clave simetrica estable y segura de 256 bits
     const key = crypto.createHash('sha256').update(password).digest();
     // Genera un Vector de Inicializacion (IV) aleatorio y unico de 16 bytes (para asegurar que cada cifrado sea diferente)
     const iv = crypto.randomBytes(16);
-    
+
     // Instancia el objeto cifrador usando el algoritmo AES-256 en modo CBC con la clave y el vector generados
     const cipher = crypto.createCipheriv(algorithm, key, iv);
     // Ejecuta el cifrado de los datos comprimidos concatenando el cuerpo de datos y la cola del bloque final
     const encrypted = Buffer.concat([cipher.update(compressed), cipher.final()]);
     // Junta el Vector de Inicializacion de 16 bytes y los datos encriptados en un unico buffer de salida
     const outputBuffer = Buffer.concat([iv, encrypted]);
-    
+
     // Resuelve la ubicacion absoluta donde se escribira el archivo encriptado final en la raiz del proyecto
     const outputPath = path.join(__dirname, '..', 'src.enc');
     // Escribe fisicamente en el disco duro el buffer encriptado resultante
     fs.writeFileSync(outputPath, outputBuffer);
-    
+
     // Inicia una prueba automatica de descifrado en memoria (fail-safe) para asegurar que el archivo src.enc generado funciona a la perfección
     try {
         // Lee directamente el archivo encriptado recien escrito en el disco
@@ -285,13 +285,13 @@ function encrypt(password) {
         const testDecompressed = zlib.gunzipSync(testDecrypted);
         // Decodifica el texto recuperado de vuelta a un objeto JSON
         const testParsed = JSON.parse(testDecompressed.toString('utf-8'));
-        
+
         // Verifica si la cantidad de archivos descifrados coincide exactamente con la cantidad original empaquetada
         if (Object.keys(testParsed).length !== fileCount) {
             // Lanza un error si hay diferencias en los elementos
             throw new Error("El número de archivos verificados no coincide.");
         }
-    // Captura cualquier fallo ocurrido durante el proceso de prueba de integridad
+        // Captura cualquier fallo ocurrido durante el proceso de prueba de integridad
     } catch (err) {
         // Informa que la prueba fallo y que por seguridad se detiene el borrado de las carpetas locales
         console.error("[ERROR CRÍTICO] La prueba de integridad falló. Cifrado abortado.");
@@ -305,7 +305,7 @@ function encrypt(password) {
     console.log(`[VERIFICADO] Cifrado e integridad probada al 100%.`);
     // Avisa que procedera a vaciar el espacio de trabajo local para proteger el codigo
     console.log(`[PROCESANDO] Eliminando carpetas y archivos de código fuente para asegurar el entorno...`);
-    
+
     // Llama a la funcion para eliminar fisicamente las carpetas locales en claro
     deletePaths();
 
@@ -330,7 +330,7 @@ function decrypt(password) {
         // Sale del script de Node
         process.exit(1);
     }
-    
+
     // Lee por completo el archivo cifrado src.enc a memoria
     const inputBuffer = fs.readFileSync(inputPath);
     // Comprueba que el archivo leido tenga al menos 17 bytes (16 bytes del IV y minimo 1 byte de datos cifrados)
@@ -340,14 +340,14 @@ function decrypt(password) {
         // Sale del script con codigo de error
         process.exit(1);
     }
-    
+
     // Extrae los primeros 16 bytes que corresponden al Vector de Inicializacion
     const iv = inputBuffer.subarray(0, 16);
     // Extrae el bloque de datos cifrados restante
     const encrypted = inputBuffer.subarray(16);
     // Aplica un hash SHA-256 a la clave proporcionada por el usuario para generar la llave de descifrado
     const key = crypto.createHash('sha256').update(password).digest();
-    
+
     // Inicializa la variable que contendra los bytes desencriptados
     let decrypted;
     // Abre un bloque de captura de errores para manejar claves incorrectas de forma segura
@@ -356,14 +356,14 @@ function decrypt(password) {
         const decipher = crypto.createDecipheriv(algorithm, key, iv);
         // Descifra los datos binarios uniendo la parte intermedia y el residuo del bloque final
         decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
-    // Captura fallas de padding o integridad (lo que ocurre cuando la contraseña es incorrecta)
+        // Captura fallas de padding o integridad (lo que ocurre cuando la contraseña es incorrecta)
     } catch (e) {
         // Informa que la clave de descifrado es incorrecta
         console.error("[ERROR] Clave de descifrado incorrecta.");
         // Sale de Node con el codigo de estado 2 (el cual le indica al script bat que muestre la interfaz roja de error)
         process.exit(2);
     }
-    
+
     // Inicializa la variable que contendra los archivos mapeados en memoria
     let packedData;
     // Abre un bloque de captura de errores para la descompresion GZIP y parsing JSON
@@ -372,17 +372,17 @@ function decrypt(password) {
         const decompressed = zlib.gunzipSync(decrypted);
         // Decodifica la cadena de texto UTF-8 a un objeto JSON indexado
         packedData = JSON.parse(decompressed.toString('utf-8'));
-    // Captura cualquier falla producida en la descompresion (como datos corruptos)
+        // Captura cualquier falla producida en la descompresion (como datos corruptos)
     } catch (e) {
         // Muestra un mensaje detallando el fallo en el parseo
         console.error("[ERROR] Error al descomprimir o parsear los datos recuperados.");
         // Termina el script de Node con codigo de estado 3
         process.exit(3);
     }
-    
+
     // Recrea los directorios y archivos originales en el disco duro
     unpackPaths(packedData);
-    
+
     // Informa que el entorno ha sido descifrado y restaurado con exito total
     console.log(`\n=== ENTORNO DESCIFRADO CON ÉXITO ===`);
     console.log(`Archivos restaurados: ${Object.keys(packedData).length}`);
@@ -407,11 +407,11 @@ if (!password) {
 if (command === 'encrypt') {
     // Invoca a la funcion de encriptacion pasandole la contraseña
     encrypt(password);
-// Si la accion solicitada corresponde a desencriptar
+    // Si la accion solicitada corresponde a desencriptar
 } else if (command === 'decrypt') {
     // Invoca a la funcion de descifrado pasandole la contraseña
     decrypt(password);
-// En caso de que se pase un comando no soportado por consola
+    // En caso de que se pase un comando no soportado por consola
 } else {
     // Muestra la guia de uso correcto de la consola
     console.log("Uso: node crypt-env.js [encrypt|decrypt] [clave]");
