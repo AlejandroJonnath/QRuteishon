@@ -6,57 +6,11 @@ const path = require('path');
 const zlib = require('zlib');
 // Importa el modulo de criptografia nativo (para poder realizar operaciones de hashing SHA-256 y cifrado AES-256-CBC)
 const crypto = require('crypto');
+// Importa las configuraciones compartidas desde el archivo de configuracion
+const { TARGET_PATHS, algorithm } = require('./crypt-config');
 
 // SECCION
-// Este archivo de codigo sirve como el motor criptografico del proyecto realizando la lectura recursiva compresion y cifrado AES-256-CBC de todos los archivos sensibles para guardarlos en un solo archivo protegido y asimismo realiza la operacion contraria para restaurarlos en su sitio original en disco
-
-// Define el listado de carpetas y archivos que seran procesados por el motor criptografico
-const TARGET_PATHS = [
-    // Representa la carpeta que contiene las vistas y pantallas principales basadas en Expo Router
-    'app',
-    // Representa la carpeta de componentes reutilizables de la interfaz de usuario de la aplicacion
-    'components',
-    // Representa la carpeta de contextos para el manejo de estado global de React
-    'context',
-    // Representa la carpeta de hooks personalizados para la logica de negocio en React
-    'hooks',
-    // Representa la carpeta de librerias de configuracion compartida como Supabase
-    'lib',
-    // Representa la carpeta de servicios para realizar llamadas a la API y Supabase
-    'services',
-    // Representa la carpeta de utilidades auxiliares y funciones formateadoras
-    'utils',
-    // Representa la carpeta local de respaldos de seguridad que tambien sera encriptada
-    'porsiacaso',
-    // Representa la carpeta que contiene las imagenes y recursos estaticos de la aplicacion
-    'assets',
-    // Representa el archivo de configuracion de variables de entorno local
-    '.env',
-    // Archivo de ignorados especifico de EAS
-    '.easignore',
-    // Archivo de configuracion de EAS Build
-    'eas.json',
-    // Representa el archivo de configuracion global de la aplicacion Expo
-    'app.json',
-    // Representa el archivo de configuracion de reglas de estilo de linter ESLint
-    'eslint.config.js',
-    // Representa el archivo de definiciones de variables de entorno de TypeScript de Expo
-    'expo-env.d.ts',
-    // Representa el archivo de manifiesto de dependencias de Node
-    'package.json',
-    // Representa el archivo que bloquea y registra las versiones exactas de las dependencias
-    'package-lock.json',
-    // Representa el archivo de configuracion del compilador de TypeScript
-    'tsconfig.json',
-    // Representa la guia de documentacion sobre la base de datos Supabase
-    'supabase.md',
-    // Representa los scripts de auditoria OWASP creados recientemente
-    'owasp_auditor.py',
-    // Representa el script de Windows para cifrar que se auto-eliminara tras terminar
-    'Bloquear.bat'
-];
-// Configura el algoritmo de cifrado simetrico estandar de la industria con clave de 256 bits y encadenamiento de bloques
-const algorithm = 'aes-256-cbc';
+// Este archivo contiene unicamente la logica necesaria para empaquetar y cifrar el entorno, siendo llamado directamente por Bloquear.bat.
 
 // FUNCION: getAllFiles
 // Sirve para recorrer recursivamente una carpeta y obtener de forma secuencial las rutas de todos los archivos contenidos en ella y en sus respectivas subcarpetas
@@ -170,32 +124,11 @@ function deletePaths() {
     });
 }
 
-// FUNCION: unpackPaths
-// Sirve para tomar el objeto JSON de archivos descifrados y recrear en el disco la estructura de carpetas original y escribir en cada ruta su contenido correspondiente binario
-function unpackPaths(packed) {
-    // Itera secuencialmente sobre todas las llaves (rutas relativas de archivos) presentes en el objeto empaquetado
-    Object.keys(packed).forEach(relativePath => {
-        // Construye la ruta absoluta de destino final combinando la raiz del proyecto y la ruta relativa del archivo
-        const fullPath = path.join(__dirname, '..', relativePath);
-        // Extrae la ruta de la carpeta que contendra al archivo actual
-        const dirName = path.dirname(fullPath);
-        // Si la carpeta de destino no existe en el disco duro
-        if (!fs.existsSync(dirName)) {
-            // Crea de forma recursiva todas las carpetas intermedias necesarias en el disco
-            fs.mkdirSync(dirName, { recursive: true });
-        }
-        // Convierte el contenido codificado en Base64 de vuelta a un buffer binario nativo de Node
-        const buffer = Buffer.from(packed[relativePath], 'base64');
-        // Escribe de forma sincrona los bytes en la ruta absoluta final recreando el archivo original
-        fs.writeFileSync(fullPath, buffer);
-    });
-}
-
 // FUNCION: verifyMandatoryPaths
 // Sirve para validar previamente que las carpetas y archivos fundamentales existan en disco antes de encriptar (evitando destruir la copia de seguridad por error)
 function verifyMandatoryPaths() {
     // Define el listado de carpetas y archivos minimos que deben estar en claro en el disco antes de permitir el cifrado
-    const mandatory = ['app', 'components', 'package.json'];
+    const mandatory = ['app', 'src', 'package.json'];
     // Inicializa un arreglo que guardara aquellos elementos que hagan falta en el disco
     const missing = [];
     // Itera y verifica la existencia de cada elemento clave
@@ -316,84 +249,10 @@ function encrypt(password) {
     console.log(`Archivos protegidos: ${fileCount}`);
 }
 
-// FUNCION: decrypt
-// Sirve para descifrar el archivo src.enc utilizando la contraseña del usuario restaurando todas las carpetas originales en el disco en menos de 150 milisegundos
-function decrypt(password) {
-    // Muestra el inicio formal del proceso de restauracion y descifrado
-    console.log("=== INICIANDO PROCESO DE DESCIFRADO DEL ENTORNO ===");
-    // Resuelve la ubicacion absoluta del archivo de seguridad src.enc en la raiz
-    const inputPath = path.join(__dirname, '..', 'src.enc');
-    // Verifica si el archivo encriptado existe en el disco duro
-    if (!fs.existsSync(inputPath)) {
-        // Si no existe, muestra un error informativo
-        console.error("[ERROR] El archivo cifrado 'src.enc' no existe en la raíz del proyecto.");
-        // Sale del script de Node
-        process.exit(1);
-    }
-
-    // Lee por completo el archivo cifrado src.enc a memoria
-    const inputBuffer = fs.readFileSync(inputPath);
-    // Comprueba que el archivo leido tenga al menos 17 bytes (16 bytes del IV y minimo 1 byte de datos cifrados)
-    if (inputBuffer.length < 17) {
-        // Muestra un mensaje indicando corrupcion del archivo
-        console.error("[ERROR] El archivo 'src.enc' está corrupto o incompleto.");
-        // Sale del script con codigo de error
-        process.exit(1);
-    }
-
-    // Extrae los primeros 16 bytes que corresponden al Vector de Inicializacion
-    const iv = inputBuffer.subarray(0, 16);
-    // Extrae el bloque de datos cifrados restante
-    const encrypted = inputBuffer.subarray(16);
-    // Aplica un hash SHA-256 a la clave proporcionada por el usuario para generar la llave de descifrado
-    const key = crypto.createHash('sha256').update(password).digest();
-
-    // Inicializa la variable que contendra los bytes desencriptados
-    let decrypted;
-    // Abre un bloque de captura de errores para manejar claves incorrectas de forma segura
-    try {
-        // Instancia el descifrador de Node con la clave y el IV correspondientes
-        const decipher = crypto.createDecipheriv(algorithm, key, iv);
-        // Descifra los datos binarios uniendo la parte intermedia y el residuo del bloque final
-        decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
-        // Captura fallas de padding o integridad (lo que ocurre cuando la contraseña es incorrecta)
-    } catch (e) {
-        // Informa que la clave de descifrado es incorrecta
-        console.error("[ERROR] Clave de descifrado incorrecta.");
-        // Sale de Node con el codigo de estado 2 (el cual le indica al script bat que muestre la interfaz roja de error)
-        process.exit(2);
-    }
-
-    // Inicializa la variable que contendra los archivos mapeados en memoria
-    let packedData;
-    // Abre un bloque de captura de errores para la descompresion GZIP y parsing JSON
-    try {
-        // Descomprime el buffer binario recuperado para obtener el JSON original en texto plano
-        const decompressed = zlib.gunzipSync(decrypted);
-        // Decodifica la cadena de texto UTF-8 a un objeto JSON indexado
-        packedData = JSON.parse(decompressed.toString('utf-8'));
-        // Captura cualquier falla producida en la descompresion (como datos corruptos)
-    } catch (e) {
-        // Muestra un mensaje detallando el fallo en el parseo
-        console.error("[ERROR] Error al descomprimir o parsear los datos recuperados.");
-        // Termina el script de Node con codigo de estado 3
-        process.exit(3);
-    }
-
-    // Recrea los directorios y archivos originales en el disco duro
-    unpackPaths(packedData);
-
-    // Informa que el entorno ha sido descifrado y restaurado con exito total
-    console.log(`\n=== ENTORNO DESCIFRADO CON ÉXITO ===`);
-    console.log(`Archivos restaurados: ${Object.keys(packedData).length}`);
-}
-
 // Obtiene los argumentos pasados por consola a la ejecucion de Node omitiendo las rutas internas del ejecutable
 const args = process.argv.slice(2);
-// Recupera el primer argumento que indica la accion a realizar (encrypt o decrypt)
-const command = args[0];
-// Recupera el segundo argumento que contiene la contraseña escrita por el usuario en la terminal
-const password = args[1];
+// Recupera el primer argumento que contiene la contraseña escrita por el usuario en la terminal
+const password = args[0];
 
 // Si la clave no fue proporcionada en la llamada por consola
 if (!password) {
@@ -403,25 +262,12 @@ if (!password) {
     process.exit(4);
 }
 
-// Si la accion solicitada corresponde a encriptar
-if (command === 'encrypt') {
-    // Invoca a la funcion de encriptacion pasandole la contraseña
-    encrypt(password);
-    // Si la accion solicitada corresponde a desencriptar
-} else if (command === 'decrypt') {
-    // Invoca a la funcion de descifrado pasandole la contraseña
-    decrypt(password);
-    // En caso de que se pase un comando no soportado por consola
-} else {
-    // Muestra la guia de uso correcto de la consola
-    console.log("Uso: node crypt-env.js [encrypt|decrypt] [clave]");
-}
+// Ejecuta directamente la logica de encriptacion
+encrypt(password);
 
 // ANÁLISIS DE PROBLEMAS SI SE QUITAN LAS FUNCIONES:
 // "si quitas la funcion getAllFiles pasa que el empaquetador no podra explorar el interior de las subcarpetas del proyecto (como app/ o components/) provocando que el archivo src.enc quede vacio y perdiendo todo tu codigo fuente"
 // "si quitas la funcion packPaths pasa que el motor no recopilara ningun archivo de tu computadora y el comando de bloqueo fallara lanzando un error por falta de datos para cifrar"
 // "si quitas la funcion deletePaths pasa que los archivos y carpetas sensibles continuaran expuestos en tu disco duro despues de encriptar (anulando el proposito de proteccion del sistema)"
-// "si quitas la funcion unpackPaths pasa que al introducir la clave correcta el descifrador no escribira ningun archivo en tu disco (dejando el entorno eternamente oculto en src.enc)"
 // "si quitas la funcion verifyMandatoryPaths pasa que el script no validara la presencia de carpetas esenciales (permitiendo que un doble clic accidental en Bloquear.bat cuando el proyecto ya esta cerrado sobrescriba tu boveda real con una vacia destruyendo tu codigo para siempre)"
 // "si quitas la funcion encrypt pasa que el sistema sera incapaz de empaquetar comprimir y cifrar tus archivos con AES-256 impidiendo cerrar el entorno para subirlo seguro a GitHub"
-// "si quitas la funcion decrypt pasa que jamas podras volver a leer tu codigo fuente en texto plano desde el archivo src.enc (quedando el proyecto bloqueado permanentemente bajo llave)"

@@ -26,8 +26,8 @@ if "%KEY%"=="" goto EMPTY_KEY
 
 :: Imprime un mensaje indicando que se ha iniciado el proceso de descifrado de los archivos
 echo   [PROCESANDO] Descifrando archivos...
-:: Ejecuta el motor Node.js pasandole la ruta del script de descifrado y la clave escrita por el usuario entre comillas (para evitar problemas con espacios)
-node scripts\crypt-env.js decrypt "%KEY%"
+:: Llama a Node de forma nativa pasandole la clave escrita por el usuario para desencriptar el archivo src.enc
+node scripts\crypt-unlock.js "%KEY%"
 
 :: Guarda el codigo de salida que retorno el proceso anterior de Node.js en la variable EXIT_CODE (para saber si el descifrado fue exitoso o fallo)
 set EXIT_CODE=%ERRORLEVEL%
@@ -97,7 +97,7 @@ pause > nul
 
 ::ANÁLISIS DE PROBLEMAS SI SE QUITAN LAS FUNCIONES:
 ::"si quitas la comparacion if "%KEY%"=="" goto EMPTY_KEY pasa que el script intentara ejecutar Node con una clave vacia lo cual provocara un error de argumento en crypt-env.js y cerrara el programa abruptamente"
-::"si quitas la ejecucion de node scripts\crypt-env.js decrypt "%KEY%" pasa que nunca se invocara el motor de descifrado y las carpetas de codigo jamas se restauraran en tu disco duro (quedando el proyecto inservible en su estado encriptado)"
+::"si quitas la ejecucion de node scripts\crypt-unlock.js "%KEY%" pasa que nunca se invocara el motor de descifrado y las carpetas de codigo jamas se restauraran en tu disco duro (quedando el proyecto inservible en su estado encriptado)"
 ::"si quitas la comprobacion de EXIT_CODE pasa que el script siempre dira que fue exitoso o mostrara pantallas equivocadas incluso si la clave ingresada era incorrecta (confundiendo al desarrollador)"
 ::"si quitas las etiquetas :SUCCESS :WRONG_KEY o :GENERIC_ERROR pasa que el archivo por lotes de Windows no sabra a donde saltar y lanzara un error de sintaxis del sistema de archivos .bat deteniendo la ejecucion"
 ::"si quitas la pausa pause > nul del final pasa que la consola de comandos se cerrara instantaneamente en una fraccion de segundo despues de procesar y el desarrollador no podra ver si el descifrado tuvo exito o fallo"
